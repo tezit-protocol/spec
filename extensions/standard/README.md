@@ -29,6 +29,8 @@ Use cases include due diligence documents where claims must be traceable, resear
 
 **Schema:** See [Appendix C.1](https://github.com/tezit-protocol/spec/blob/main/TEZIT_PROTOCOL_SPEC.md#c1-facts-extension-tezit-facts) of the protocol spec.
 
+**Note:** Reference implementation available from Ragu Platform (Python, `extensions.py`).
+
 ---
 
 ### `tezit-relationships`
@@ -41,6 +43,8 @@ Maps connections between a Tez and external entities -- people, organizations, p
 Useful for organizational knowledge graphs, stakeholder mapping, and understanding how tezits relate to the broader context of an organization or project.
 
 **Schema:** See [Appendix C.2](https://github.com/tezit-protocol/spec/blob/main/TEZIT_PROTOCOL_SPEC.md#c2-relationships-extension-tezit-relationships) of the protocol spec.
+
+**Note:** Reference implementation available from Ragu Platform (Python, `extensions.py`).
 
 ---
 
@@ -87,6 +91,8 @@ Defines metrics for evaluating interrogation quality against a Tez. Captures sco
 Originally developed as `com.ragu.eval-metrics`, this extension was proposed for standardization because interrogation quality measurement is broadly useful across all Tezit implementations. Full specification is now in the TIP Enterprise Addendum Section 8, with 5 defined metrics: relevance, faithfulness, citation_accuracy, completeness, and abstention_rate.
 
 **Proposal:** See [`extensions/proposed/tezit-eval/`](../proposed/tezit-eval/) (forthcoming).
+
+**Note:** Reference implementation available from Ragu Platform. JSON Schema: `schemas/enterprise-tip-eval.schema.json`.
 
 ---
 

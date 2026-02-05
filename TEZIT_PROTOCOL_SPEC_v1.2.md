@@ -1,6 +1,6 @@
 # Tezit Protocol Specification
 
-**Version**: 1.2.3
+**Version**: 1.2.4
 **Status**: Draft
 **Last Updated**: February 5, 2026
 **Website**: [tezit.com/spec](https://tezit.com/spec)
@@ -41,7 +41,7 @@ The following platforms have implemented or are actively implementing the Tezit 
 | Platform | Type | Status | Notes |
 |----------|------|--------|-------|
 | **MyPA.chat** | Personal AI assistant | v1.2 (active) | First implementer. Consumer-facing personal assistant with Tez creation and interrogation. |
-| **Ragu Platform** | Enterprise AI orchestration | v1.0/1.1 (implemented), v1.2 (aligning). Contributed Coordination Profile, Code Review Profile, and TIP Enterprise Addendum specifications. | Second implementer. Enterprise platform with 11 microservices, agentic RAG pipeline, fine-grained authorization (OpenFGA), and multi-model support. |
+| **Ragu Platform** | Enterprise AI orchestration | v1.0/1.1 (implemented), v1.2 (aligning). Contributed Coordination Profile, Code Review Profile, and TIP Enterprise Addendum specifications. Delivered 44-test conformance suite covering Levels 0-3, TIP compliance, and round-trip validation. Built production-grade reference implementations: tez:// URI scheme, tezit-facts, tezit-relationships, TIP session/citation/classification, and validation engine. Delivered 4 JSON Schema files for code review findings, code review surface, coordination surface, and enterprise TIP evaluation metrics. | Second implementer. Enterprise platform with 11 microservices, agentic RAG pipeline, fine-grained authorization (OpenFGA), and multi-model support. |
 
 Implementers are encouraged to register at [tezit.com/implementers](https://tezit.com/implementers) for interoperability testing and specification feedback.
 
@@ -54,9 +54,9 @@ The following companion documents extend the Tezit Protocol with detailed protoc
 | **Tez Interrogation Protocol (TIP)** | Detailed wire protocol for interrogation sessions, including streaming, session management, and multi-turn grounded Q&A | Planned |
 | **Tez HTTP API** | RESTful API specification for creating, sharing, interrogating, and managing tezits over HTTP | Planned |
 | **`tez://` URI Scheme** | URI scheme for referencing tezits, context items, and specific locations within tezits (e.g., `tez://acme-analysis/context/doc-001:p12`) | Planned |
-| **Coordination Profile Specification** | Full specification for the Coordination Profile (tasks, decisions, questions, blockers) with status state machine, dependency modeling, periodic review cadence, escalation patterns, and dashboard aggregation | Proposal (Ragu Platform) |
-| **Code Review Profile Specification** | Profile specification for code review workflows with structured findings, severity levels, code-specific citations, fork semantics, and integration guidance | Draft Proposal (Ragu Platform) |
-| **TIP Enterprise Addendum** | Enterprise extensions to TIP: streaming SSE protocol, FGA-scoped interrogation, retrieval transparency, multi-pass retrieval, multi-tenant isolation, high-throughput guidance, and tezit-eval quality metrics | Draft (Ragu Platform) |
+| **Coordination Profile Specification** | Full specification for the Coordination Profile (tasks, decisions, questions, blockers) with status state machine, dependency modeling, periodic review cadence, escalation patterns, and dashboard aggregation | v1.1-draft (Ragu Platform) |
+| **Code Review Profile Specification** | Profile specification for code review workflows with structured findings, severity levels, code-specific citations, fork semantics, and integration guidance | v0.2.0 Proposed (Ragu Platform) |
+| **TIP Enterprise Addendum** | Enterprise extensions to TIP: streaming SSE protocol, FGA-scoped interrogation, retrieval transparency, multi-pass retrieval, multi-tenant isolation, high-throughput guidance, and tezit-eval quality metrics | v1.1-draft (Ragu Platform) |
 
 These companion specs build on the core protocol defined here. Implementations MAY support any combination of companion specs.
 
@@ -1498,6 +1498,53 @@ Conformant implementations may apply for certification at [tezit.com/certificati
 
 ---
 
+## 14. v1.3 Proposed Features
+
+> **Non-normative note**: These proposals are accepted for design consideration in v1.3. They are not yet normative.
+
+The following features have been proposed and accepted for design consideration in the next minor protocol version. Each was contributed by an active implementer and addresses a concrete gap identified during implementation.
+
+### 14.1 Bundle Signature Verification
+
+**Proposed by:** Ragu Platform
+
+Introduces a `manifest.signature` field enabling recipients to verify bundle integrity without trusting transport.
+
+**Mechanism:**
+- **Algorithm**: ed25519
+- **Fields**: `algorithm`, `public_key`, `signed_fields`
+- **Signed content**: Manifest hash, context item hashes, synthesis hash
+
+**Use case**: When tezits are shared across organizational boundaries or through untrusted channels, recipients need assurance that the bundle has not been tampered with in transit. This complements the existing `tezit-encryption` extension by providing integrity verification independent of encryption.
+
+### 14.2 Interrogation Session Transfer
+
+**Proposed by:** Ragu Platform
+
+Introduces a `session_transfer` mechanism for sharing interrogation sessions when resharing tezits (with explicit consent).
+
+**Mechanism:**
+- **Scope options**: `full` (entire session), `summary` (AI-generated summary of session), `questions_only` (questions without answers)
+- **Consent**: Requires explicit opt-in from the original interrogator
+- **Privacy**: Sessions are stripped of identifying metadata unless the interrogator consents to attribution
+
+**Use case**: When a recipient interrogates a Tez and then reshares it, the next recipient benefits from knowing what questions were already asked. This avoids redundant interrogation and surfaces the "path of inquiry" that led the previous recipient to their conclusions.
+
+### 14.3 Context Item Versioning
+
+**Proposed by:** Ragu Platform
+
+Introduces per-item `version`, `previous_hash`, and `updated_at` fields within context items.
+
+**Mechanism:**
+- **Per-item fields**: `version` (integer), `previous_hash` (hash of prior version), `updated_at` (ISO 8601 timestamp)
+- **Sync optimization**: Recipients can compare hashes and fetch only changed items
+- **Diff visualization**: Platforms can show what changed between context item versions
+
+**Use case**: For living document tezits (Section 8.3), context items update over time. Without per-item versioning, recipients must re-download the entire context on every sync. With versioning, platforms can perform efficient incremental sync and show recipients exactly what changed since their last view.
+
+---
+
 ## Appendix A: Messaging Profile (Experimental)
 
 > **Status**: Experimental -- this profile is under active development and may change significantly in future versions. It is not part of the core protocol and implementations are not required to support it.
@@ -1964,6 +2011,12 @@ Full JSON schemas are available at:
 - [tezit.com/spec/v1.2/params.schema.json](https://tezit.com/spec/v1.2/params.schema.json)
 - [tezit.com/spec/v1.2/inline.schema.json](https://tezit.com/spec/v1.2/inline.schema.json)
 
+**Companion specification schemas** (contributed by Ragu Platform):
+- [`schemas/code-review-finding.schema.json`](schemas/code-review-finding.schema.json) -- Structured findings for code review workflows
+- [`schemas/code-review-surface.schema.json`](schemas/code-review-surface.schema.json) -- Surface metadata for code review profile tezits
+- [`schemas/coordination-surface.schema.json`](schemas/coordination-surface.schema.json) -- Surface metadata for coordination profile tezits
+- [`schemas/enterprise-tip-eval.schema.json`](schemas/enterprise-tip-eval.schema.json) -- Evaluation metrics for enterprise TIP interrogation quality
+
 ## Appendix F: Example Bundle
 
 A complete example bundle is available at:
@@ -1973,6 +2026,7 @@ A complete example bundle is available at:
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.2.4 | 2026-02-05 | Updated companion spec versions (Code Review Profile v0.2.0 Proposed, Coordination Profile v1.1-draft, TIP Enterprise Addendum v1.1-draft). Added 4 JSON Schema files for companion specifications. Updated Ragu implementer status with 44-test conformance suite, reference implementations, and schema deliverables. Added v1.3 Proposed Features section with three accepted proposals: bundle signature verification, interrogation session transfer, and context item versioning. |
 | 1.2.3 | 2026-02-05 | Added companion spec references for Coordination Profile, Code Review Profile, and TIP Enterprise Addendum. Added `review` and `coordination` synthesis types. Added `synthesis.supplementary` field. Updated Ragu Platform implementer status. |
 | 1.2.2 | 2026-02-05 | Extended citation syntax with element-type references (tables, figures, paragraphs). Living document failure modes (source unavailable, degraded context, freshness warnings). Extension registry process with PR-based contribution, vendor namespaces, and lifecycle stages. Code Review profile (proposed, contributed by Ragu Platform). Ragu Platform added as second implementer. |
 | 1.2.1 | 2026-02-05 | Added coordination profile for team collaboration (tasks, decisions, questions, blockers). Clarified context scope semantics with concrete examples. Added multi-model interrogation guidance (minimum requirements, citation verification, large context handling). Added JSON Schema references and validation section. Standardized field naming across bundle formats (`tezit_version` in JSON, `tezit` in YAML). |

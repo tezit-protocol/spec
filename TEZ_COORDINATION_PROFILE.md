@@ -1,6 +1,6 @@
 # Tezit Protocol: Coordination Profile Specification
 
-**Version**: 1.0-draft
+**Version**: 1.1-draft
 **Status**: Proposal
 **Date**: February 5, 2026
 **Authors**: Ragu Platform Team (Enterprise AI Orchestration)
@@ -614,8 +614,13 @@ statuses varies by item type:
 | `completed` | Work done, criteria met | Decision made and recorded | Answer provided | Impediment resolved |
 | `cancelled` | Withdrawn | Decision deferred indefinitely | Question no longer relevant | Blocker no longer applicable |
 
-Implementations SHOULD NOT allow `in_progress` status for `decision` or
+Implementations MUST NOT allow `in_progress` status for `decision` or
 `question` items. For these types, `acknowledged` represents active work.
+
+> **Rationale (v1.1):** In practice, `in_progress` decisions without
+> assignment are where coordination tezits stall. A decision is either
+> pending (awaiting input) or completed (resolved). The intermediate state
+> adds no value and creates ambiguity about responsibility.
 
 ---
 
@@ -1551,6 +1556,86 @@ When an AI agent creates or transitions a coordination item, the `actor`
 object MUST set `type` to `"agent"`. Implementations SHOULD track whether
 transitions were initiated by humans or agents for audit purposes.
 
+### 16.5 Consumer Compatibility Guidance
+
+The Coordination Profile is designed to serve both enterprise orchestration
+systems and consumer platforms. This section provides guidance for consumer
+platform adoption.
+
+**Design principle:** Every REQUIRED field must be justifiable for a 3-person
+team coordinating a weekend project.
+
+#### 16.5.1 Minimum Viable Coordination Tez
+
+The smallest useful coordination tezit is a single task with:
+
+- An **assignee** and a **due date**
+- One **voice memo** as context (in the context trail)
+- A **three-state status machine**: `pending`, `in_progress`, `completed`
+
+This minimum is fully conformant with Level 1 (Basic Coordination). Consumer
+platforms need not implement the full six-state machine for their initial
+integration; however, they MUST accept tezits that use the full state set and
+SHOULD map unsupported states gracefully (e.g., treating `acknowledged` as
+`pending` and `blocked` as `in_progress` for display purposes).
+
+#### 16.5.2 Level 1 (Basic) for Consumer Platforms
+
+Level 1 (Basic Coordination) conformance is explicitly designed for consumer
+platforms such as personal assistant apps (e.g., MyPA.chat), family
+coordination tools, and small-team project trackers. These platforms benefit
+from the coordination tezit's core value proposition -- actionable items
+with communication context attached -- without requiring enterprise
+infrastructure.
+
+A Level 1 consumer implementation needs:
+
+1. A manifest generator for the `tezit-coordination` extension.
+2. A status transition engine (the three-state subset is sufficient for UX;
+   the full six-state set MUST be accepted on ingest).
+3. Support for the `assignee` and `informed` roles (the minimum useful
+   subset of the five standard roles).
+4. A synthesis document linking the item to its originating voice memo or
+   message.
+
+#### 16.5.3 What Consumer Platforms Can Safely Ignore
+
+The following features are either non-normative or restricted to Level 2
+(Full Coordination) conformance. Consumer platforms MAY omit them without
+affecting interoperability:
+
+- **Dashboard aggregation** (Section 13): Non-normative. Dashboards are
+  computed views, not part of the tezit format. Consumer platforms may
+  present coordination items however suits their UX.
+- **Dependency modeling with cycle detection** (Section 8): Level 2 only.
+  Consumer platforms MAY store dependency references for display but are
+  not required to implement cycle detection or automatic unblocking.
+- **Escalation patterns** (Section 10): Level 2 only. Consumer platforms
+  are not expected to implement tiered escalation rules or automatic
+  priority elevation.
+- **Periodic review cadence** (Section 9): Level 2 only. Consumer platforms
+  may use their own notification and reminder mechanisms.
+
+#### 16.5.4 Voice-First Workflows
+
+A coordination tezit created from a voice memo is a first-class citizen of
+this specification. The minimum schema accommodates voice-first workflows
+without requiring enterprise infrastructure:
+
+1. A user records a voice memo describing a task.
+2. An AI assistant transcribes the memo and extracts the coordination item
+   (item type, assignee, due date).
+3. The voice memo becomes a context trail entry (`type: "voice_memo"`).
+4. The synthesis document summarizes the task with a citation to the voice
+   memo.
+5. The recipient can interrogate the tezit to hear or read the original
+   request.
+
+This workflow produces a fully conformant coordination tezit using only
+Level 1 features. The voice memo is both the originating communication and
+the primary context -- no meeting notes, chat threads, or CI systems
+required.
+
 ---
 
 ## 17. Examples
@@ -2054,6 +2139,7 @@ with AI agent coders.
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.1-draft | 2026-02 | Elevated `in_progress` restriction for decision and question items from SHOULD NOT to MUST NOT (normative). Added Section 16.5 Consumer Compatibility Guidance defining minimum viable coordination tez and design principles for consumer platform adoption. Level 1 (Basic) conformance explicitly targets consumer platforms. |
 | 1.0-draft | 2026-02-05 | Initial proposal based on Ragu Platform production patterns |
 
 ---

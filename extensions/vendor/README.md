@@ -17,11 +17,13 @@ Ragu is an enterprise AI orchestration platform with 11 microservices, an agenti
 | Extension | Description | Status |
 |-----------|-------------|--------|
 | `com.ragu.fga-access` | Fine-grained access control within tezits. Integrates with OpenFGA to enforce per-context-item and per-section authorization, enabling tezits where different recipients see different subsets of content. Formalized in TIP Enterprise Addendum Section 3. | Active |
-| `com.ragu.eval-metrics` | Interrogation quality metrics. Captures groundedness, relevance, and faithfulness scores for interrogation sessions. Being proposed for standardization as `tezit-eval`. Full specification in TIP Enterprise Addendum Section 8. | Active (standardizing) |
-| `com.ragu.retrieval-transparency` | Retrieval method and scoring data. Records which retrieval strategy was used (semantic search, keyword, hybrid, agentic), the similarity scores, and the ranking methodology -- making the RAG pipeline auditable. Formalized in TIP Enterprise Addendum Section 4. | Active |
+| `com.ragu.eval-metrics` | Interrogation quality metrics. Captures groundedness, relevance, and faithfulness scores for interrogation sessions. Being proposed for standardization as `tezit-eval`. Full specification in TIP Enterprise Addendum Section 8. Reference implementation delivered. Registry submission pending. | Active (standardizing) |
+| `com.ragu.retrieval-transparency` | Retrieval method and scoring data. Records which retrieval strategy was used (semantic search, keyword, hybrid, agentic), the similarity scores, and the ranking methodology -- making the RAG pipeline auditable. Formalized in TIP Enterprise Addendum Section 4. Reference implementation delivered in `extensions.py`. Registry submission pending. | Active (implemented) |
 | `com.ragu.multi-tenant` | Tenant isolation metadata. Embeds tenant identifiers and isolation boundaries within tezits, ensuring that multi-tenant platforms can share tezits across organizational boundaries without leaking data between tenants. Formalized in TIP Enterprise Addendum Section 6. | Active |
 | `com.ragu.streaming-interrogation` | Production SSE streaming protocol for real-time interrogation. Formalized in TIP Enterprise Addendum Section 2. | Active (standardizing) |
-| `com.ragu.code-review` | Code review workflow profile with structured findings, severity levels, and fork semantics. Formalized as Code Review Profile draft specification. | Active (standardizing) |
+| `com.ragu.code-review` | Code review workflow profile with structured findings, severity levels, and fork semantics. Formalized as Code Review Profile v0.2.0 (Proposed). | Active (standardizing) |
+
+Ragu has delivered a 44-test conformance suite and production-grade reference implementations for the tez:// URI scheme, standard extensions, TIP session management, and bundle validation.
 
 ---
 

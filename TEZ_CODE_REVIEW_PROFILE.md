@@ -1,8 +1,8 @@
 # Tezit Protocol Profile: Code Review
 
 **Profile ID**: `code_review`
-**Version**: 0.1.0
-**Status**: Draft Proposal
+**Version**: 0.2.0
+**Status**: Proposed
 **Date**: February 5, 2026
 **Authors**: Ragu Platform Team
 **Spec Compatibility**: Tezit Protocol v1.2
@@ -100,7 +100,13 @@ When a consumer encounters `"profile": "code_review"`, it SHOULD:
       "role": "string (REQUIRED)",
       "type": "string (OPTIONAL: 'human'|'ai'|'hybrid')"
     },
-    "review_tools": ["array of strings (OPTIONAL)"]
+    "review_tools": ["array of strings (OPTIONAL)"],
+    "observation_summary": {
+      "issue": "integer (OPTIONAL, default: finding_count)",
+      "praise": "integer (OPTIONAL, default: 0)",
+      "question": "integer (OPTIONAL, default: 0)",
+      "note": "integer (OPTIONAL, default: 0)"
+    }
   }
 }
 ```
@@ -136,7 +142,8 @@ The `reviewer.type` and `author.type` fields distinguish human from AI participa
     "lines_changed": 847,
     "reviewer": { "name": "Reviewer Agent B", "role": "reviewer", "type": "ai" },
     "author": { "name": "Builder Agent A", "role": "author", "type": "ai" },
-    "review_tools": ["ruff", "pytest", "mypy", "eslint"]
+    "review_tools": ["ruff", "pytest", "mypy", "eslint"],
+    "observation_summary": { "issue": 6, "praise": 1, "question": 1, "note": 0 }
   }
 }
 ```
@@ -165,10 +172,14 @@ Each finding represents a discrete review observation. Findings MUST be structur
     "function": "string (OPTIONAL)",
     "class": "string (OPTIONAL)"
   },
+  "observation_type": "string (OPTIONAL: 'issue'|'praise'|'question'|'note', default: 'issue')",
+  "confidence": "string (OPTIONAL: 'high'|'medium'|'low')",
+  "confidence_reasoning": "string (OPTIONAL)",
   "suggestion": {
     "description": "string (OPTIONAL)",
     "code": "string (OPTIONAL)",
-    "diff": "string (OPTIONAL, unified diff format)"
+    "diff": "string (OPTIONAL, unified diff format)",
+    "rendering_hint": "string (OPTIONAL: 'inline_diff'|'side_by_side'|'unified'|'code_block')"
   },
   "citations": ["array of citation strings (OPTIONAL)"],
   "status": "string (REQUIRED: 'open'|'acknowledged'|'fixed'|'wont_fix'|'disputed'|'invalid')",
@@ -219,13 +230,51 @@ Status transitions are tracked through the fork mechanism (Section 7):
 | `disputed` | Author disagrees; requires discussion |
 | `invalid` | Determined to be a false positive |
 
-### 4.5 Example Finding
+### 4.5 Observation Types
+
+| Type | Meaning |
+|------|---------|
+| `issue` | A problem to be addressed (default) |
+| `praise` | A positive observation about well-written code |
+| `question` | A question for the author seeking clarification |
+| `note` | A general observation or informational remark |
+
+Positive observations are orthogonal to the severity scale. A reviewer noting "this auth middleware is well-structured" is not an informational-severity issue -- it is a praise-type observation. The `severity` and `observation_type` dimensions are independent.
+
+When `observation_type` is omitted, consumers MUST treat the finding as `issue` for backward compatibility.
+
+The `observation_summary` field in the surface schema (Section 3.1) provides aggregate counts by observation type, enabling consumers to display counts without parsing all findings.
+
+### 4.6 Confidence Metadata
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `confidence` | `high` / `medium` / `low` | Structured certainty level for the finding |
+| `confidence_reasoning` | string | Explanation of why the confidence level was assigned |
+
+When the reviewer is an AI system, findings SHOULD carry structured certainty metadata. This distinguishes definitive issues ("this null pointer dereference will crash in production", high confidence) from speculative concerns ("this might have a race condition under high concurrency", low confidence). Human reviewers MAY omit this field.
+
+### 4.7 Suggestion Rendering Hints
+
+| Hint | Meaning |
+|------|---------|
+| `inline_diff` | Render the suggestion as an inline diff within the source view |
+| `side_by_side` | Render original and suggested code side by side |
+| `unified` | Render as a unified diff |
+| `code_block` | Render the suggested code as a standalone code block |
+
+The hint is advisory -- consumers MAY ignore it. This addresses the practical problem that a web platform, a CLI tool, and a mobile app will render diffs differently, and the suggestion author is in the best position to indicate which rendering is most useful for a given fix.
+
+### 4.8 Example Finding
 
 ```json
 {
   "id": "finding-001",
   "severity": "high",
   "category": "security",
+  "observation_type": "issue",
+  "confidence": "high",
+  "confidence_reasoning": "Direct string interpolation into SQL with no sanitization; exploitable via public API endpoint.",
   "title": "SQL injection via unsanitized user input in get_user_by_name",
   "description": "The name parameter is interpolated directly into the SQL query string without parameterization. Exploitable via the public API without authentication.",
   "location": {
@@ -234,7 +283,8 @@ Status transitions are tracked through the fork mechanism (Section 7):
   },
   "suggestion": {
     "description": "Use parameterized queries.",
-    "code": "cursor.execute('SELECT * FROM users WHERE name = %s', (name,))"
+    "code": "cursor.execute('SELECT * FROM users WHERE name = %s', (name,))",
+    "rendering_hint": "inline_diff"
   },
   "citations": ["[[src-api-users-py:L42-45]]", "[[owasp-sql-injection]]"],
   "status": "open",
@@ -611,10 +661,20 @@ review-auth-redesign-2026-02-05-001/
 | Re-review request | Re-Review Fork (Section 7.2) |
 | CODEOWNERS | `surface.reviewer` with `role: "auditor"` |
 
-## Appendix C: Change Log
+## Appendix C: Backward Compatibility
+
+All v0.2.0 additions are backward-compatible -- all new fields are OPTIONAL with sensible defaults. A v0.1.0 consumer can process a v0.2.0 finding by ignoring unknown fields. Specifically:
+
+- `observation_type` defaults to `issue`, preserving existing behavior.
+- `confidence` and `confidence_reasoning` are purely additive metadata; omission changes nothing.
+- `rendering_hint` is advisory and consumers MAY ignore it entirely.
+- `observation_summary` in the surface schema is OPTIONAL; consumers that do not recognize it will continue to use `severity_summary` and `finding_count` as before.
+
+## Appendix D: Change Log
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.2.0 | 2026-02 | Status upgraded from Draft to Proposed. Added `confidence` and `confidence_reasoning` fields for AI reviewer certainty metadata. Added `observation_type` (issue/praise/question/note) to separate positive observations from the severity scale. Added `observation_summary` to the surface schema. Added `rendering_hint` to suggestion schema for advisory diff presentation mode. All new fields are OPTIONAL with backward-compatible defaults. |
 | 0.1.0 | 2026-02-05 | Initial draft proposal |
 
 ---

@@ -1,7 +1,7 @@
 # TIP Enterprise Addendum
 
 **Specification**: Tez Interrogation Protocol (TIP) -- Enterprise Addendum
-**Version**: 1.0-draft
+**Version**: 1.1-draft
 **Status**: Draft for Review
 **Date**: February 5, 2026
 **Authors**: Ragu Platform Team
@@ -775,6 +775,56 @@ The implementation MUST:
 The maximum number of iterations SHOULD be configurable and MUST NOT exceed 5
 to prevent unbounded resource consumption.
 
+#### 5.2.5 Cost and Latency Guidance for Retrieval Strategies
+
+The choice of retrieval strategy has significant implications for latency,
+token consumption, and cost. Implementations SHOULD consider the following
+guidance when selecting or recommending strategies:
+
+| Strategy | Expected Latency | Token Budget Multiplier | Use Case |
+|----------|-----------------|----------------------|----------|
+| `single_pass` | 100-500ms | 1x | Simple queries, small context |
+| `multi_pass` | 500ms-2s | 2-3x | Complex queries needing query reformulation |
+| `iterative` | 2-10s | 3-10x | Exhaustive research, comprehensive answers |
+| `exhaustive` | 5-30s | 5-20x | Audit, compliance, complete context coverage |
+
+**Enforcement Ceilings for `iterative` Strategy**
+
+The `iterative` strategy carries the highest risk of unbounded resource
+consumption. To prevent runaway iteration, implementations MUST enforce
+at least one of the following ceilings and SHOULD enforce all three:
+
+1. **Maximum iteration count**: The maximum number of retrieval rounds.
+   This is implementation-defined; RECOMMENDED maximum of 5.
+
+2. **Maximum total retrieval time**: The maximum wall-clock time spent on
+   all retrieval passes combined. RECOMMENDED 10 seconds.
+
+3. **Maximum chunks evaluated**: The maximum number of chunks retrieved
+   across all iterations combined. RECOMMENDED 500.
+
+When any ceiling is reached, the implementation MUST stop iterating and
+generate the response using results collected so far. Results MUST include
+`retrieval_budget_exhausted: true` in the retrieval transparency metadata
+(Section 4) to signal that the retrieval was curtailed:
+
+```json
+{
+  "retrieval_summary": {
+    "strategy": "iterative",
+    "iterations_completed": 5,
+    "chunks_evaluated": 487,
+    "retrieval_time_ms": 9200,
+    "retrieval_budget_exhausted": true,
+    "ceiling_reached": "max_iterations"
+  }
+}
+```
+
+The `ceiling_reached` field SHOULD indicate which ceiling triggered
+termination. When multiple ceilings are reached simultaneously, the
+implementation SHOULD report the first one reached.
+
 ### 5.3 Query Schema Extension
 
 The TIP query schema is extended with an optional `retrieval_strategy` field:
@@ -886,6 +936,54 @@ a tez with their law firm), the following rules apply:
 4. **Audit logs are partitioned by tenant.** Both the sending and receiving
    tenants MUST maintain audit records of cross-tenant interrogation
    activity.
+
+#### 6.3.1 Cross-Tenant Availability Handling
+
+When context items are shared across tenant boundaries, the availability
+of those items becomes a dependency consideration. If the source tenant's
+storage is unavailable, the receiving tenant's interrogation may be
+impacted. Implementations MUST select one of the following strategies
+for cross-tenant context availability:
+
+1. **Accept dependency** (default for intra-platform sharing):
+   Context items remain in the source tenant's storage. Availability of
+   those items depends on the source tenant's SLA. This is the simplest
+   implementation: no data duplication, no synchronization. The receiving
+   tenant's interrogation will fail or degrade if the source tenant's
+   storage is unavailable.
+
+2. **Snapshot replication at share time** (RECOMMENDED for cross-platform
+   and export scenarios):
+   Context items are copied to the receiving tenant's storage at the time
+   the tez is shared. This eliminates the cross-tenant availability
+   dependency entirely. The receiving tenant holds a point-in-time snapshot
+   and is not affected by source tenant outages. This strategy is
+   RECOMMENDED for cross-platform tez sharing where the source and
+   receiving tenants may be on different infrastructure.
+
+3. **Replicated with sync** (for living documents):
+   An initial snapshot is created at share time, with periodic
+   synchronization to maintain freshness. This approach balances
+   availability (the receiving tenant has a local copy) with currency
+   (updates from the source propagate). Implementations using this
+   strategy MUST define conflict resolution semantics for concurrent
+   modifications and SHOULD document the synchronization interval
+   and staleness guarantees.
+
+**RECOMMENDED defaults:**
+
+- **Intra-platform sharing** (source and recipient on the same platform):
+  Strategy 1 (accept dependency). The platform's own SLA covers both
+  tenants.
+
+- **Cross-platform sharing** (source and recipient on different platforms
+  or when exporting a tez): Strategy 2 (snapshot replication at share
+  time). Cross-platform availability cannot be guaranteed by a single
+  platform's SLA.
+
+Implementations MUST document which strategy is used for each sharing
+scenario. The strategy in effect SHOULD be included in the tez share
+metadata so that recipients are aware of the availability model.
 
 ### 6.4 Tenant-Level Rate Limiting
 
@@ -1451,6 +1549,7 @@ to appear higher than actual quality. Consumers of quality metrics SHOULD:
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.1-draft | 2026-02-05 | Added Section 5.2.5 with cost and latency guidance for retrieval strategies, including three enforcement ceilings for the iterative strategy (maximum iterations, time, and chunks) with `retrieval_budget_exhausted` transparency signal. Added Section 6.3.1 with cross-tenant availability handling defining three strategies (accept dependency, snapshot replication, replicated with sync) and recommended defaults. |
 | 1.0-draft | 2026-02-05 | Initial draft for review |
 
 ---
