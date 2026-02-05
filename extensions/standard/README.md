@@ -14,6 +14,7 @@ Implementations MAY support any combination of standard extensions. Unsupported 
 | [`tezit-signing`](#tezit-signing) | Cryptographic signatures for bundle integrity | Standard |
 | [`tezit-encryption`](#tezit-encryption) | End-to-end encryption for sensitive tezits | Standard |
 | [`tezit-eval`](#tezit-eval) | Interrogation quality metrics | Proposed |
+| [`tezit-coordination`](#tezit-coordination) | Coordination items: tasks, decisions, questions, blockers with state machines | Proposed |
 
 ---
 
@@ -83,6 +84,17 @@ Supports hybrid encryption (X25519 key agreement + AES-256-GCM symmetric encrypt
 
 Defines metrics for evaluating interrogation quality against a Tez. Captures scores such as groundedness (are answers supported by context?), relevance (did the response address the question?), and faithfulness (does the answer avoid hallucinating beyond the source material?).
 
-Originally developed as `com.ragu.eval-metrics`, this extension was proposed for standardization because interrogation quality measurement is broadly useful across all Tezit implementations.
+Originally developed as `com.ragu.eval-metrics`, this extension was proposed for standardization because interrogation quality measurement is broadly useful across all Tezit implementations. Full specification is now in the TIP Enterprise Addendum Section 8, with 5 defined metrics: relevance, faithfulness, citation_accuracy, completeness, and abstention_rate.
 
 **Proposal:** See [`extensions/proposed/tezit-eval/`](../proposed/tezit-eval/) (forthcoming).
+
+---
+
+### `tezit-coordination`
+
+**Status:** Proposed
+**Proposed by:** Ragu Platform
+
+Full coordination profile for team coordination items -- tasks, decisions, questions, and blockers. Includes status state machine with enforced transitions, role-based recipient model, dependency modeling with cycle detection, periodic review cadence, escalation patterns, context trails linking items to originating communication, and dashboard aggregation. Derived from production patterns in the Ragu Platform orchestrator.
+
+**Specification:** See `TEZ_COORDINATION_PROFILE.md` companion document.

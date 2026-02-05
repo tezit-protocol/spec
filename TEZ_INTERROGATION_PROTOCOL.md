@@ -1,6 +1,6 @@
 # Tez Interrogation Protocol (TIP)
 
-**Version**: 1.0.2
+**Version**: 1.0.3
 **Status**: Draft
 **Last Updated**: February 5, 2026
 **Companion To**: Tezit Protocol Specification v1.2
@@ -113,6 +113,21 @@ TIP Lite is designed for small-context tezits where the total context fits comfo
 TIP Lite is appropriate for use cases such as team messaging, short memos, personal notes with a few attachments, and other scenarios where the total context comfortably fits within a single prompt.
 
 Implementations claiming TIP Lite conformance MUST NOT also claim full TIP conformance unless they independently satisfy all full TIP requirements.
+
+### 1.6 Enterprise Extensions
+
+The **TIP Enterprise Addendum** (`TEZ_TIP_ENTERPRISE_ADDENDUM.md`) extends this specification with capabilities required for enterprise deployment. The addendum is OPTIONAL -- implementations that do not require enterprise features remain fully TIP-compliant without it.
+
+The Enterprise Addendum covers:
+- **Streaming Interrogation**: Complete SSE wire protocol with 9 event types and strict ordering
+- **FGA-Scoped Interrogation**: Per-context-item access control with personalized grounding boundaries
+- **Retrieval Transparency**: Citation-level retrieval metadata for audit and compliance
+- **Multi-Pass Retrieval**: Query decomposition strategies (single_pass, multi_pass, exhaustive, iterative)
+- **Multi-Tenant Isolation**: Tenant-scoped embedding indices, cross-tenant sharing, rate limiting hierarchy
+- **High-Throughput Operations**: Connection pooling, embedding cache, session affinity, backpressure
+- **Interrogation Quality Evaluation**: The `tezit-eval` extension with standardized quality metrics
+
+The Enterprise Addendum defines 7 independent conformance claims. Implementations may adopt any subset. See `TEZ_TIP_ENTERPRISE_ADDENDUM.md` for the full specification.
 
 ---
 
@@ -849,6 +864,8 @@ Citation entries MAY include OPTIONAL retrieval metadata that exposes how each c
 
 This metadata is OPTIONAL. Platforms that expose retrieval transparency data enable better debugging and trust calibration, but implementations MUST NOT require retrieval metadata in citations. Consumers of TIP responses MUST NOT depend on retrieval metadata being present. The `retrieval` field MAY be omitted entirely from any citation entry.
 
+> **Enterprise Extension**: The TIP Enterprise Addendum (Section 4) defines the complete retrieval transparency schema for enterprise audit and compliance use cases, including per-citation retrieval pipeline metadata, query expansion traces, chunk boundary information, and standardized retrieval event logging. See `TEZ_TIP_ENTERPRISE_ADDENDUM.md` Section 4 for the full retrieval transparency specification.
+
 ### 6.7 Context Freshness
 
 For tezits that contain linked or living sources (context items that may be updated after the tez was created), TIP responses SHOULD include context freshness metadata. This helps recipients understand whether the grounded response reflects current information or potentially stale data.
@@ -1437,6 +1454,8 @@ Queries MAY include a `retrieval_strategy` hint that advises the implementation 
 Implementations MUST support `single_pass`. Support for `multi_pass` and `exhaustive` is RECOMMENDED. If a query requests an unsupported strategy, the implementation MUST fall back to `single_pass` and SHOULD indicate the fallback in the response metadata.
 
 The retrieval strategy hint is advisory. Implementations MAY override the hint if the context size or system constraints make the requested strategy impractical (e.g., `exhaustive` on a 500,000-token tez).
+
+> **Enterprise Extension**: The TIP Enterprise Addendum (Section 5) provides full multi-pass retrieval specifications including query decomposition algorithms, the `iterative` strategy for follow-up refinement queries, strategy selection guidance based on query complexity and context size, and detailed merge/deduplication rules for multi-pass result sets. See `TEZ_TIP_ENTERPRISE_ADDENDUM.md` Section 5 for the complete retrieval strategy framework.
 
 #### 10.1.8 Retrieval Provenance
 
@@ -2538,6 +2557,9 @@ TIP 1.0 defines the following extension points for future minor versions:
    | `tip.response.end` | Emitted once when the response is complete. Contains the final response classification, confidence level, and total citation count. |
 
    Citation events (`tip.citation`) are emitted inline with token events. Implementations MUST ensure that each `tip.citation` event corresponds to a citation reference that appears (or will appear) in the adjacent `tip.token` events. The `tip.response.end` event MUST NOT be emitted until all citation verification is complete.
+
+   > **Enterprise Extension**: The TIP Enterprise Addendum (Section 2) provides the complete streaming wire protocol, including additional event types (`tip.context.loaded`, `tip.retrieval.start`, `tip.retrieval.chunk`, `tip.session.end`, `tip.error`), reconnection support with `Last-Event-ID`, strict event ordering rules, and backpressure handling. The four event types defined above (`tip.session.start`, `tip.token`, `tip.citation`, `tip.response.end`) remain the core streaming events; the addendum extends them for enterprise reliability and observability requirements. See `TEZ_TIP_ENTERPRISE_ADDENDUM.md` Section 2 for the full wire protocol.
+
 8. **Multi-modal responses**: Responses that include generated diagrams or visualizations alongside text.
 
 ---
@@ -2850,6 +2872,7 @@ Response (200 OK):
 | 1.0 | 2026-02-05 | Initial specification |
 | 1.0.1 | 2026-02-05 | Added TIP Lite conformance level for small-context tezits (Section 1.5.2). Connected streaming responses to HTTP API spec (Section 15.7). Added reference test bundle guidance (Section 11.11). Added audio transcription quality considerations (Section 10.2.5). |
 | 1.0.2 | 2026-02-05 | Ragu Platform feedback integration. Expanded streaming citations with SSE event types (Section 15.7). Clarified TIP Lite threshold to support enterprise context windows (Section 1.5.2). Added retrieval strategy hints for queries (Section 10.1.7). Added retrieval transparency metadata in citations (Section 6.6). Added context freshness metadata for living sources (Section 6.7). Added element-level citation syntax for tables, figures, and paragraphs (Section 5.1.8). |
+| 1.0.3 | 2026-02-05 | Added TIP Enterprise Addendum reference (Section 1.6). Cross-referenced streaming, retrieval strategy, and retrieval transparency sections with Enterprise Addendum companion document. |
 
 ---
 

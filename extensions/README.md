@@ -89,3 +89,6 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for the full contribution process.
 - [Vendor Extensions](./vendor/) -- registered vendor namespaces
 - [Proposed Extensions](./proposed/) -- extensions under review
 - [tezit.com/spec](https://tezit.com/spec) -- protocol website
+- [Coordination Profile Specification](../TEZ_COORDINATION_PROFILE.md) -- full coordination profile spec
+- [Code Review Profile Specification](../TEZ_CODE_REVIEW_PROFILE.md) -- code review profile spec
+- [TIP Enterprise Addendum](../TEZ_TIP_ENTERPRISE_ADDENDUM.md) -- enterprise TIP extensions

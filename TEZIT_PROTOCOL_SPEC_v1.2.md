@@ -1,6 +1,6 @@
 # Tezit Protocol Specification
 
-**Version**: 1.2.2
+**Version**: 1.2.3
 **Status**: Draft
 **Last Updated**: February 5, 2026
 **Website**: [tezit.com/spec](https://tezit.com/spec)
@@ -41,7 +41,7 @@ The following platforms have implemented or are actively implementing the Tezit 
 | Platform | Type | Status | Notes |
 |----------|------|--------|-------|
 | **MyPA.chat** | Personal AI assistant | v1.2 (active) | First implementer. Consumer-facing personal assistant with Tez creation and interrogation. |
-| **Ragu Platform** | Enterprise AI orchestration | v1.0/1.1 (implemented), v1.2 (aligning) | Second implementer. Enterprise platform with 11 microservices, agentic RAG pipeline, fine-grained authorization (OpenFGA), and multi-model support. |
+| **Ragu Platform** | Enterprise AI orchestration | v1.0/1.1 (implemented), v1.2 (aligning). Contributed Coordination Profile, Code Review Profile, and TIP Enterprise Addendum specifications. | Second implementer. Enterprise platform with 11 microservices, agentic RAG pipeline, fine-grained authorization (OpenFGA), and multi-model support. |
 
 Implementers are encouraged to register at [tezit.com/implementers](https://tezit.com/implementers) for interoperability testing and specification feedback.
 
@@ -54,6 +54,9 @@ The following companion documents extend the Tezit Protocol with detailed protoc
 | **Tez Interrogation Protocol (TIP)** | Detailed wire protocol for interrogation sessions, including streaming, session management, and multi-turn grounded Q&A | Planned |
 | **Tez HTTP API** | RESTful API specification for creating, sharing, interrogating, and managing tezits over HTTP | Planned |
 | **`tez://` URI Scheme** | URI scheme for referencing tezits, context items, and specific locations within tezits (e.g., `tez://acme-analysis/context/doc-001:p12`) | Planned |
+| **Coordination Profile Specification** | Full specification for the Coordination Profile (tasks, decisions, questions, blockers) with status state machine, dependency modeling, periodic review cadence, escalation patterns, and dashboard aggregation | Proposal (Ragu Platform) |
+| **Code Review Profile Specification** | Profile specification for code review workflows with structured findings, severity levels, code-specific citations, fork semantics, and integration guidance | Draft Proposal (Ragu Platform) |
+| **TIP Enterprise Addendum** | Enterprise extensions to TIP: streaming SSE protocol, FGA-scoped interrogation, retrieval transparency, multi-pass retrieval, multi-tenant isolation, high-throughput guidance, and tezit-eval quality metrics | Draft (Ragu Platform) |
 
 These companion specs build on the core protocol defined here. Implementations MAY support any combination of companion specs.
 
@@ -307,6 +310,8 @@ The Tez protocol supports multiple **profiles** -- consumption patterns optimize
 
 #### 1.8.2 Coordination Profile
 
+> See the **Coordination Profile Specification** companion document (`TEZ_COORDINATION_PROFILE.md`, Ragu Platform contribution) for the full specification including status state machines, dependency modeling, periodic review cadence, escalation patterns, context trails, and dashboard aggregation.
+
 **Use case**: Team collaboration -- actionable items (tasks, decisions, questions, blockers) backed by the communication context that produced them.
 
 **Characteristics**:
@@ -356,9 +361,9 @@ The Tez protocol supports multiple **profiles** -- consumption patterns optimize
 | `surface.due_date` | string | No | ISO 8601 date for the deadline |
 | `surface.recipients` | array | No | List of recipients with `name` and `role` (`assignee`, `reviewer`, `informed`) |
 
-#### 1.8.3 Code Review Profile (Proposed)
+#### 1.8.3 Code Review Profile (Draft Specification)
 
-> **Status**: Proposed -- contributed by the Ragu Platform team. This profile is seeking implementer feedback and may evolve based on adoption experience.
+> **Status**: Draft Specification -- contributed by the Ragu Platform team. This profile is seeking implementer feedback and may evolve based on adoption experience. See the **Code Review Profile Specification** companion document (`TEZ_CODE_REVIEW_PROFILE.md`) for the complete profile including finding schemas, code-specific citation formats, fork semantics for review workflows, and integration guidance for GitHub/GitLab and IDEs.
 
 **Use case**: AI-assisted code review and technical review workflows
 
@@ -498,14 +503,19 @@ These schemas are also available in the `schemas/` directory of the [spec reposi
     "url": "string (OPTIONAL)"
   },
 
-  "profile": "string (OPTIONAL: 'knowledge' | 'messaging' | 'coordination' | 'review' | 'decision' | 'handoff')",
+  "profile": "string (OPTIONAL: 'knowledge' | 'messaging' | 'coordination' | 'code_review' | 'review' | 'decision' | 'handoff')",
 
   "synthesis": {
     "title": "string (REQUIRED)",
     "type": "string (REQUIRED)",
     "file": "string (REQUIRED, relative path)",
     "abstract": "string (OPTIONAL, max 500 chars)",
-    "language": "string (OPTIONAL, BCP 47 tag)"
+    "language": "string (OPTIONAL, BCP 47 tag)",
+    "supplementary": {
+      "type": "object (OPTIONAL)",
+      "description": "Additional machine-readable files associated with the synthesis (e.g., findings.json for code reviews)",
+      "additionalProperties": "string (relative path)"
+    }
   },
 
   "context": {
@@ -579,7 +589,8 @@ Standard synthesis types:
 - `analysis`: Deep-dive analysis
 - `summary`: Summarization
 - `comparison`: Comparative analysis
-- `review`: Review or critique
+- `review`: Review, critique, or code review findings
+- `coordination`: Coordination profile items (tasks, decisions, questions, blockers)
 - `tutorial`: Educational content
 - `custom`: Implementation-defined
 
@@ -1962,6 +1973,7 @@ A complete example bundle is available at:
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.2.3 | 2026-02-05 | Added companion spec references for Coordination Profile, Code Review Profile, and TIP Enterprise Addendum. Added `review` and `coordination` synthesis types. Added `synthesis.supplementary` field. Updated Ragu Platform implementer status. |
 | 1.2.2 | 2026-02-05 | Extended citation syntax with element-type references (tables, figures, paragraphs). Living document failure modes (source unavailable, degraded context, freshness warnings). Extension registry process with PR-based contribution, vendor namespaces, and lifecycle stages. Code Review profile (proposed, contributed by Ragu Platform). Ragu Platform added as second implementer. |
 | 1.2.1 | 2026-02-05 | Added coordination profile for team collaboration (tasks, decisions, questions, blockers). Clarified context scope semantics with concrete examples. Added multi-model interrogation guidance (minimum requirements, citation verification, large context handling). Added JSON Schema references and validation section. Standardized field naming across bundle formats (`tezit_version` in JSON, `tezit` in YAML). |
 | 1.2 | 2026-02-05 | Added Inline Tez (Level 0) as new lowest conformance level. Simplified core protocol: moved Messaging Profile to Appendix A (experimental) and Parameters & Negotiation to Appendix B (experimental). Updated naming conventions: plural of Tez is "tezits" (not "tezzes"); "tezit" as a verb. Added companion specification references (TIP, HTTP API, tez:// URI). Reorganized sections for clarity. Renumbered conformance levels (0-3). |
