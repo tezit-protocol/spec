@@ -86,6 +86,28 @@ Throughout this document:
 - Diagrams are illustrative and non-normative.
 - Examples are non-normative unless explicitly stated otherwise.
 
+### 1.5 Conformance Levels
+
+TIP defines two conformance levels. Platforms MUST clearly indicate which TIP level they implement.
+
+#### 1.5.1 TIP (Full Conformance)
+
+Full TIP conformance requires compliance with all requirements defined in this specification, including the complete RAG pipeline (Section 10.1), all four response classifications (Section 6), the full seven-test compliance suite (Section 11), and the interrogation session protocol (Section 8). Full TIP conformance is appropriate for Tez bundles of any size.
+
+#### 1.5.2 TIP Lite
+
+TIP Lite is designed for small-context tezits where the total context is under 32,768 tokens and a full RAG pipeline is unnecessary. TIP Lite conformance requires:
+
+1. **Full prompt loading**: All context items MUST be loaded directly into the prompt. No chunking, embedding, or retrieval pipeline is needed. This corresponds to the "Small Context" strategy defined in Section 10.2.1.
+2. **Simplified response classification**: Only two classifications are used — **grounded** (Section 6.1) and **abstention** (Section 6.4). The "inferred" and "partial" classifications are not required.
+3. **Reduced compliance tests**: Implementations MUST pass three of the seven required tests — the grounding test (Section 11.2), the abstention test (Section 11.3), and the hallucination resistance test (Section 11.4).
+4. **Stateless query/response**: No interrogation session protocol (Section 8) is required. Each query is independent; no session state is maintained between queries.
+5. **Citation format**: The citation format `[[item-id:location]]` defined in Section 5 MUST be used without modification. Citations are not optional in TIP Lite.
+
+TIP Lite is appropriate for use cases such as team messaging, short memos, personal notes with a few attachments, and other scenarios where the total context comfortably fits within a single prompt.
+
+Implementations claiming TIP Lite conformance MUST NOT also claim full TIP conformance unless they independently satisfy all full TIP requirements.
+
 ---
 
 ## 2. Terminology
@@ -1363,8 +1385,8 @@ Context items may include non-text formats. Implementations MUST handle these as
 | **PDF** | Extract text via PDF parsing. Preserve page boundaries for citation. If the PDF contains images or charts, apply OCR or vision model extraction. SHOULD preserve tables. |
 | **Images** (PNG, JPG, TIFF) | Use a vision-capable model to generate text descriptions. Store both the description and the image reference. Citations reference the image by item-id. |
 | **Spreadsheets** (XLSX, CSV) | Convert to structured text representation (markdown tables or JSON). Preserve sheet names, column headers, and row structure for citation. |
-| **Audio** (MP3, WAV, M4A) | Transcribe to text using speech-to-text. Preserve timestamps. Citations reference timestamps. |
-| **Video** (MP4, MOV) | Extract audio and transcribe. Extract keyframes for vision analysis if relevant. Citations reference timestamps. |
+| **Audio** (MP3, WAV, M4A) | Transcribe to text using speech-to-text. Preserve timestamps. Citations reference timestamps. See Section 10.2.5 for transcription quality guidance. |
+| **Video** (MP4, MOV) | Extract audio and transcribe. Extract keyframes for vision analysis if relevant. Citations reference timestamps. See Section 10.2.5 for transcription quality guidance. |
 | **Source Code** | Load as plain text with line numbers preserved. Chunk at function/class boundaries. Citations reference line numbers. |
 | **Email** (EML, MSG) | Parse headers (from, to, date, subject) and body. Preserve threading information. |
 | **Structured Data** (JSON, XML) | Load as-is. Enable JSON path or XPath queries. |
@@ -1372,6 +1394,17 @@ Context items may include non-text formats. Implementations MUST handle these as
 | **Archives** (ZIP within context) | Extract and index contents individually. |
 
 For any format not listed above, implementations SHOULD attempt text extraction. If text extraction fails, the item MUST still appear in the context inventory but SHOULD be flagged as unindexed.
+
+#### 10.2.5 Audio Transcription Quality
+
+When context items include audio transcriptions, implementations SHOULD consider transcription confidence as a factor in response confidence. Transcription errors become ground truth for interrogation purposes — the interrogation system treats the transcribed text as the authoritative representation of the audio content, even if the transcription contains errors.
+
+Implementations MAY include transcription confidence metadata (e.g., word-level confidence scores from Whisper or other speech-to-text systems) and surface this information when citing transcribed content. For example, if a cited passage has low transcription confidence, the response MAY note this: "According to the audio transcription [[voice-memo:t3m24s]] (note: transcription confidence is low for this segment)..."
+
+Implementations SHOULD:
+1. Preserve word-level or segment-level confidence scores when available from the transcription pipeline.
+2. Flag segments with confidence below a configurable threshold (RECOMMENDED default: 0.7) as potentially unreliable.
+3. Include transcription confidence in the provenance metadata tracked per Section 10.1.7.
 
 ### 10.3 Model Requirements
 
@@ -1618,6 +1651,21 @@ In addition to the seven required tests, the following OPTIONAL tests are RECOMM
 **Procedure**: Use a test bundle that includes a PDF, a spreadsheet, an image, and a markdown file. Ask a question that requires information from the spreadsheet.
 
 **Pass Criteria**: System correctly extracts and cites data from the spreadsheet.
+
+### 11.11 Reference Test Bundle
+
+A reference test bundle is available at [`https://github.com/tezit-protocol/spec/tree/main/test-bundles/tip-compliance`](https://github.com/tezit-protocol/spec/tree/main/test-bundles/tip-compliance).
+
+The bundle contains:
+
+- A synthesis document with known claims that can be traced to specific context items.
+- Context items containing specific, verifiable facts (including numerical figures, dates, and named entities).
+- Expected citation mappings that define the correct `item-id` and location for each claim in the synthesis.
+- Test queries with expected classification outcomes (grounded, inferred, partial, or abstention) for automated validation.
+
+Implementers SHOULD validate their interrogation implementation against this bundle before claiming TIP compliance. The reference bundle is versioned alongside this specification; each TIP version will have a corresponding test bundle version.
+
+**Note**: The MyPA.chat team, the first live TIP implementation, contributed test cases derived from real-world voice memo and transcription scenarios. These test cases exercise audio transcription citation, timestamp-based grounding, and the handling of transcription artifacts in interrogation responses.
 
 ---
 
@@ -2335,7 +2383,7 @@ TIP 1.0 defines the following extension points for future minor versions:
 4. **Additional citation formats**: New location specifier types may be added (e.g., paragraph-level, cell-level).
 5. **Additional hosting models**: New hosting configurations may be defined.
 6. **Additional compliance tests**: New required tests may be added to the suite.
-7. **Streaming responses**: Real-time token-by-token response delivery.
+7. **Streaming responses**: Streaming interrogation responses are specified in the companion Tez HTTP API Specification (Section 5.2, `POST /api/v1/tez/{id}/interrogate/stream`). Implementations supporting streaming MUST use Server-Sent Events (SSE) format. The streaming response MUST include the same grounding guarantees as non-streaming responses — citation verification and response classification MUST be applied to the complete response.
 8. **Multi-modal responses**: Responses that include generated diagrams or visualizations alongside text.
 
 ---
@@ -2645,6 +2693,7 @@ Response (200 OK):
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | 2026-02-05 | Initial specification |
+| 1.0.1 | 2026-02-05 | Added TIP Lite conformance level for small-context tezits (Section 1.5.2). Connected streaming responses to HTTP API spec (Section 15.7). Added reference test bundle guidance (Section 11.11). Added audio transcription quality considerations (Section 10.2.5). |
 
 ---
 

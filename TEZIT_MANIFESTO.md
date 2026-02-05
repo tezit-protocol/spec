@@ -3,7 +3,7 @@
 **Version**: 1.0
 **Date**: January 26, 2026
 **Website**: [tezit.com](https://tezit.com)
-**Protocol Repository**: [github.com/tezit/tezit-protocol](https://github.com/tezit/tezit-protocol)
+**Protocol Repository**: [github.com/tezit-protocol/spec](https://github.com/tezit-protocol/spec)
 
 ---
 
@@ -345,7 +345,7 @@ Tezit.com is one implementation of the protocol, but not the only one. Organizat
 
 ### Reference Implementation
 
-The reference implementation is available at [github.com/tezit/tezit-protocol](https://github.com/tezit/tezit-protocol):
+The reference implementation is available at [github.com/tezit-protocol/spec](https://github.com/tezit-protocol/spec):
 
 ```
 tezit-protocol/
@@ -623,7 +623,7 @@ If you share these beliefs, join us:
 
 ## Appendix B: Protocol Schemas
 
-See the full JSON schemas at [github.com/tezit/tezit-protocol/spec](https://github.com/tezit/tezit-protocol/spec).
+See the full JSON schemas at [github.com/tezit-protocol/spec/spec](https://github.com/tezit-protocol/spec/spec).
 
 ## Appendix C: Security Considerations
 

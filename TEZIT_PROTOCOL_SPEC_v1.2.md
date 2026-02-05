@@ -102,6 +102,8 @@ The CFO flagged this concern in October [[CFO Email Thread:p2]]...
 | `permissions.fork` | boolean | No | Whether recipients can fork (default: true) |
 | `tags` | array | No | Classification tags |
 
+> **Field naming note**: In `manifest.json`, the field is `tezit_version`. In Inline Tez YAML frontmatter, the abbreviated form `tezit` is used. Both refer to the protocol version and are semantically equivalent. The abbreviated form improves brevity in hand-authored Markdown; the explicit form improves clarity in machine-generated JSON.
+
 **Citation in Inline Tez:** Citations use the same double-bracket syntax as other conformance levels, but reference context items by their `label` rather than by `item-id`:
 - `[[Q4 Budget Spreadsheet]]` -- reference by label
 - `[[Q4 Budget Spreadsheet:Sheet2]]` -- with location specifier
@@ -292,16 +294,67 @@ The Tez protocol supports multiple **profiles** -- consumption patterns optimize
 }
 ```
 
-#### 1.8.2 Profile Interoperability
+#### 1.8.2 Coordination Profile
+
+**Use case**: Team collaboration -- actionable items (tasks, decisions, questions, blockers) backed by the communication context that produced them.
+
+**Characteristics**:
+- **Surface** is an actionable item with structured metadata:
+  - `item_type`: `task`, `decision`, `question`, or `blocker`
+  - `status`: `pending`, `acknowledged`, or `completed`
+  - `assignee`: person responsible for the item
+  - `due_date`: optional deadline
+- **Context** provides the communication history that produced the item (voice memos, chat messages, meeting notes, email threads)
+- **Interrogation** focus: "what was decided?", "what's the background?", "what are the dependencies?"
+- **Multiple recipients with roles**: `assignee` (owns the item), `reviewer` (approves or validates), `informed` (kept in the loop)
+- **Status tracking** as first-class metadata -- updates to status are versioned and auditable
+
+**Example**: A product team standup produces a blocker. The Tez captures the blocker as the surface item, with the voice memo from standup, related Slack thread, and sprint board screenshot as context. The assignee's PA can answer "why is this blocked?" and "what was the original decision that led here?" from the transmitted context.
+
+**Manifest indicator**:
+```json
+{
+  "profile": "coordination",
+  "surface": {
+    "item_type": "blocker",
+    "title": "Auth service migration blocked on legacy SAML adapter",
+    "status": "pending",
+    "assignee": {
+      "name": "Marcus Chen",
+      "email": "marcus@company.com",
+      "role": "assignee"
+    },
+    "due_date": "2026-02-14",
+    "recipients": [
+      { "name": "Marcus Chen", "role": "assignee" },
+      { "name": "Priya Patel", "role": "reviewer" },
+      { "name": "Engineering Leads", "role": "informed" }
+    ]
+  }
+}
+```
+
+**Surface field schema (coordination profile)**:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `surface.item_type` | string | Yes | `task`, `decision`, `question`, or `blocker` |
+| `surface.title` | string | Yes | Human-readable description of the actionable item |
+| `surface.status` | string | Yes | `pending`, `acknowledged`, or `completed` |
+| `surface.assignee` | object | No | Primary person responsible (`name`, `email`, `role`) |
+| `surface.due_date` | string | No | ISO 8601 date for the deadline |
+| `surface.recipients` | array | No | List of recipients with `name` and `role` (`assignee`, `reviewer`, `informed`) |
+
+#### 1.8.3 Profile Interoperability
 
 Profiles are **hints**, not barriers. Any Tez can be interrogated regardless of profile. The profile indicates the *intended* consumption pattern, not a restriction.
 
 Implementations SHOULD:
 - Support all defined profiles
-- Default UI based on profile (interrogation for knowledge, threading for messaging)
+- Default UI based on profile (interrogation for knowledge, threading for messaging, action tracking for coordination)
 - Allow users to switch consumption modes
 
-#### 1.8.3 Future Profiles
+#### 1.8.4 Future Profiles
 
 The protocol is extensible to additional profiles:
 - **Decision**: Structured choices with trade-offs and parameters
@@ -353,6 +406,16 @@ When distributed as a single file, bundles SHOULD use:
 
 Example: `acme-analysis-2026-01.tez`
 
+### 2.4 Validation
+
+Machine-parseable JSON Schemas for validating Tez bundles are available at:
+- **Manifest**: [`https://tezit.com/spec/v1.2/manifest.schema.json`](https://tezit.com/spec/v1.2/manifest.schema.json)
+- **Conversation**: [`https://tezit.com/spec/v1.2/conversation.schema.json`](https://tezit.com/spec/v1.2/conversation.schema.json)
+- **Parameters**: [`https://tezit.com/spec/v1.2/params.schema.json`](https://tezit.com/spec/v1.2/params.schema.json)
+- **Inline Tez**: [`https://tezit.com/spec/v1.2/inline.schema.json`](https://tezit.com/spec/v1.2/inline.schema.json)
+
+These schemas are also available in the `schemas/` directory of the [spec repository](https://github.com/tezit-protocol/spec). Implementations SHOULD validate bundles against these schemas during import and export. See also Appendix E for the full list.
+
 ---
 
 ## 3. Manifest Schema
@@ -376,7 +439,7 @@ Example: `acme-analysis-2026-01.tez`
     "url": "string (OPTIONAL)"
   },
 
-  "profile": "string (OPTIONAL: 'knowledge' | 'messaging' | 'decision' | 'handoff')",
+  "profile": "string (OPTIONAL: 'knowledge' | 'messaging' | 'coordination' | 'decision' | 'handoff')",
 
   "synthesis": {
     "title": "string (REQUIRED)",
@@ -463,10 +526,13 @@ Standard synthesis types:
 
 ### 3.4 Context Scopes
 
-- `full`: All accessible materials were searched
-- `focused`: Auto-expanded from entities/topics
-- `private`: Only explicitly provided items
-- `custom`: Implementation-defined scoping
+- `full`: All accessible materials were searched and relevant items included.
+  *Example*: A legal due diligence Tez where the entire document room was indexed. The creator's platform searched every available document and included all items that matched relevance criteria. Recipients can trust that omissions reflect irrelevance, not oversight.
+- `focused`: Context was auto-expanded from entities, topics, or relationships mentioned in the synthesis.
+  *Example*: A team coordination card where related voice memos and messages were automatically pulled in based on mentioned people and topics. The platform started with a specific item and discovered related context by following entity and topic references.
+- `private`: Only explicitly provided items are included.
+  *Example*: A personal research Tez where the creator hand-picked specific papers and data sources. No automated discovery or expansion was performed. The context represents a deliberate, curated selection.
+- `custom`: Implementation-defined scoping. Implementations using this value SHOULD document their scoping strategy in the synthesis or extension metadata.
 
 ### 3.5 Context Item Types
 
@@ -893,6 +959,50 @@ Implementations SHOULD track interrogation costs:
 
 Senders MAY set budgets and receive alerts when approaching limits.
 
+### 6.9 Multi-Model Considerations
+
+Tezits are model-agnostic by design. Any AI model capable of grounded question-answering can power interrogation. However, implementations should account for the following when supporting multiple model backends.
+
+#### Minimum Model Requirements
+
+Models used for interrogation MUST:
+- Support a context window of at least 32K tokens (to accommodate manifest, synthesis, and retrieved context chunks in a single prompt)
+- Follow system prompt instructions reliably, particularly the grounding constraint (Section 6.4) that restricts answers to transmitted context
+
+Models that do not meet these requirements SHOULD NOT be offered for interrogation, as grounding quality degrades significantly below these thresholds.
+
+#### Recommended Models Hint
+
+Senders MAY include a `recommended_models` field in the manifest as a non-binding hint to recipient platforms:
+
+```json
+{
+  "interrogation": {
+    "recommended_models": ["claude-sonnet-4", "gpt-4o", "gemini-2.0-pro"],
+    "min_context_window": 32000
+  }
+}
+```
+
+This field is advisory. Recipient platforms are free to use any model that meets the minimum requirements. The hint helps platforms select an appropriate model when multiple are available.
+
+#### Citation Accuracy Across Models
+
+Citation accuracy varies across model families. Some models are more reliable at producing valid `[[item-id:location]]` references than others. To mitigate this:
+
+- Platforms SHOULD post-process all interrogation responses to verify that cited item IDs exist in `context.items` and that location specifiers reference valid positions (see Section 6.5)
+- Platforms SHOULD NOT expose unverified citations to recipients
+- Platforms MAY maintain per-model accuracy metrics to inform model selection
+
+#### Large Context Handling
+
+When a Tez's context exceeds the model's context window, implementations SHOULD apply retrieval-augmented generation (RAG) and chunking strategies as specified in the companion **Tez Interrogation Protocol (TIP)** specification. Key considerations:
+
+- Chunk context items using format-specific strategies (Section 6.5, Format-Specific Chunking table)
+- Retrieve the most relevant chunks for each query via embedding similarity or keyword search
+- Include the synthesis (`tez.md`) in every prompt to maintain grounding in the sender's framing
+- When relevant context may span multiple chunks, implementations SHOULD use multi-pass retrieval
+
 ---
 
 ## 7. Forking
@@ -1197,7 +1307,7 @@ Content-Disposition: attachment; filename="analysis.tez"
 ### 13.1 Test Suite
 
 The reference test suite is available at:
-[github.com/tezit/tezit-protocol/tests](https://github.com/tezit/tezit-protocol/tests)
+[github.com/tezit-protocol/spec/tests](https://github.com/tezit-protocol/spec/tests)
 
 ### 13.2 Validation
 
@@ -1683,12 +1793,13 @@ Full JSON schemas are available at:
 ## Appendix F: Example Bundle
 
 A complete example bundle is available at:
-[github.com/tezit/tezit-protocol/examples/acme-analysis](https://github.com/tezit/tezit-protocol/examples/acme-analysis)
+[github.com/tezit-protocol/spec/examples/acme-analysis](https://github.com/tezit-protocol/spec/examples/acme-analysis)
 
 ## Appendix G: Changelog
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.2.1 | 2026-02-05 | Added coordination profile for team collaboration (tasks, decisions, questions, blockers). Clarified context scope semantics with concrete examples. Added multi-model interrogation guidance (minimum requirements, citation verification, large context handling). Added JSON Schema references and validation section. Standardized field naming across bundle formats (`tezit_version` in JSON, `tezit` in YAML). |
 | 1.2 | 2026-02-05 | Added Inline Tez (Level 0) as new lowest conformance level. Simplified core protocol: moved Messaging Profile to Appendix A (experimental) and Parameters & Negotiation to Appendix B (experimental). Updated naming conventions: plural of Tez is "tezits" (not "tezzes"); "tezit" as a verb. Added companion specification references (TIP, HTTP API, tez:// URI). Reorganized sections for clarity. Renumbered conformance levels (0-3). |
 | 1.1 | 2026-02-05 | Added Section 1.6 Core Principles. Added Section 1.7 Tez Profiles (knowledge, messaging, decision, handoff). Added `profile` and `surface` fields to manifest schema. Added `tezit-facts` and `tezit-relationships` standard extensions. |
 | 1.0 | 2026-01-26 | Initial specification. |

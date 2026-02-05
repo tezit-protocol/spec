@@ -1458,7 +1458,7 @@ Content-Disposition: attachment; filename="analysis.tez"
 ### 13.1 Test Suite
 
 The reference test suite is available at:
-[github.com/tezit/tezit-protocol/tests](https://github.com/tezit/tezit-protocol/tests)
+[github.com/tezit-protocol/spec/tests](https://github.com/tezit-protocol/spec/tests)
 
 ### 13.2 Validation
 
@@ -1485,7 +1485,7 @@ Full JSON schemas are available at:
 ## Appendix B: Example Bundle
 
 A complete example bundle is available at:
-[github.com/tezit/tezit-protocol/examples/acme-analysis](https://github.com/tezit/tezit-protocol/examples/acme-analysis)
+[github.com/tezit-protocol/spec/examples/acme-analysis](https://github.com/tezit-protocol/spec/examples/acme-analysis)
 
 ## Appendix C: Change Log
 

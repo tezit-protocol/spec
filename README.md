@@ -12,6 +12,9 @@ Tezit is an open protocol for bundling knowledge artifacts — documents, data, 
 | [Tez Interrogation Protocol (TIP)](TEZ_INTERROGATION_PROTOCOL.md) | Grounded AI responses from tez context | Stable |
 | [HTTP API](TEZ_HTTP_API_SPEC.md) | REST API for platforms implementing the protocol | Stable |
 | [tez:// URI Scheme](TEZ_URI_SCHEME.md) | URI scheme for addressing tezits and their contents | Stable |
+| [Schemas](schemas/) | JSON Schema files for validation | Stable |
+| [Test Bundle](test-bundles/tip-compliance/) | TIP compliance reference test bundle | Stable |
+| [MyPA.chat Alignment Guide](MYPA_ALIGNMENT_GUIDE.md) | Implementation guide for MyPA.chat | Stable |
 
 ### Earlier Versions
 
