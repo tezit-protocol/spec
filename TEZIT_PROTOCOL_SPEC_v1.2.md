@@ -1,6 +1,6 @@
 # Tezit Protocol Specification
 
-**Version**: 1.2
+**Version**: 1.2.2
 **Status**: Draft
 **Last Updated**: February 5, 2026
 **Website**: [tezit.com/spec](https://tezit.com/spec)
@@ -33,6 +33,17 @@ This specification does NOT cover:
 - UI/UX guidelines
 
 **Non-normative note**: The 19-week RAGU plan implements internal Tez assembly and enterprise sharing only. External Tezit.com connectivity is out of scope for that plan.
+
+### 1.2.1 Known Implementers
+
+The following platforms have implemented or are actively implementing the Tezit Protocol:
+
+| Platform | Type | Status | Notes |
+|----------|------|--------|-------|
+| **MyPA.chat** | Personal AI assistant | v1.2 (active) | First implementer. Consumer-facing personal assistant with Tez creation and interrogation. |
+| **Ragu Platform** | Enterprise AI orchestration | v1.0/1.1 (implemented), v1.2 (aligning) | Second implementer. Enterprise platform with 11 microservices, agentic RAG pipeline, fine-grained authorization (OpenFGA), and multi-model support. |
+
+Implementers are encouraged to register at [tezit.com/implementers](https://tezit.com/implementers) for interoperability testing and specification feedback.
 
 ### 1.3 Companion Specifications
 
@@ -345,7 +356,55 @@ The Tez protocol supports multiple **profiles** -- consumption patterns optimize
 | `surface.due_date` | string | No | ISO 8601 date for the deadline |
 | `surface.recipients` | array | No | List of recipients with `name` and `role` (`assignee`, `reviewer`, `informed`) |
 
-#### 1.8.3 Profile Interoperability
+#### 1.8.3 Code Review Profile (Proposed)
+
+> **Status**: Proposed -- contributed by the Ragu Platform team. This profile is seeking implementer feedback and may evolve based on adoption experience.
+
+**Use case**: AI-assisted code review and technical review workflows
+
+**Characteristics**:
+- **Surface** presents review findings, recommendations, and approval/rejection status
+- **Context** includes source code files, AI dialogue (review conversation), git diffs, test results, and lint output
+- **Interrogation** focus: "Why was this code flagged?", "What's the severity of this finding?", "What alternative was suggested?" -- answered from the review context
+- Review findings are structured with severity, category, and file location
+- Supports multi-reviewer workflows where each reviewer's findings are independently interrogable
+
+**Example**: A pull request review where the AI flags a potential SQL injection vulnerability. The Tez captures the finding as the surface, with the source code diff, the AI's analysis conversation, existing test coverage, and lint output as context. A developer can interrogate: "Why was line 47 flagged?" and receive a grounded answer citing the specific code pattern and the security rule that triggered the finding.
+
+**Manifest indicator**:
+```json
+{
+  "profile": "review",
+  "surface": {
+    "review_type": "code_review",
+    "status": "changes_requested",
+    "findings_count": 3,
+    "severity_summary": {
+      "critical": 1,
+      "warning": 2,
+      "info": 0
+    },
+    "target": {
+      "repository": "acme/auth-service",
+      "pull_request": 142,
+      "base_ref": "main",
+      "head_ref": "feature/oauth-migration"
+    }
+  }
+}
+```
+
+**Surface field schema (review profile)**:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `surface.review_type` | string | Yes | `code_review`, `design_review`, `security_review`, `architecture_review` |
+| `surface.status` | string | Yes | `approved`, `changes_requested`, `rejected`, `pending` |
+| `surface.findings_count` | integer | No | Total number of review findings |
+| `surface.severity_summary` | object | No | Count of findings by severity (`critical`, `warning`, `info`) |
+| `surface.target` | object | No | What is being reviewed (repository, PR, document, etc.) |
+
+#### 1.8.4 Profile Interoperability
 
 Profiles are **hints**, not barriers. Any Tez can be interrogated regardless of profile. The profile indicates the *intended* consumption pattern, not a restriction.
 
@@ -354,7 +413,7 @@ Implementations SHOULD:
 - Default UI based on profile (interrogation for knowledge, threading for messaging, action tracking for coordination)
 - Allow users to switch consumption modes
 
-#### 1.8.4 Future Profiles
+#### 1.8.5 Future Profiles
 
 The protocol is extensible to additional profiles:
 - **Decision**: Structured choices with trade-offs and parameters
@@ -439,7 +498,7 @@ These schemas are also available in the `schemas/` directory of the [spec reposi
     "url": "string (OPTIONAL)"
   },
 
-  "profile": "string (OPTIONAL: 'knowledge' | 'messaging' | 'coordination' | 'decision' | 'handoff')",
+  "profile": "string (OPTIONAL: 'knowledge' | 'messaging' | 'coordination' | 'review' | 'decision' | 'handoff')",
 
   "synthesis": {
     "title": "string (REQUIRED)",
@@ -594,6 +653,30 @@ Citation formats:
 - `[[item-id:p12-15]]`: Pages 12-15
 - `[[item-id:section]]`: Section reference
 - `[[item-id:timestamp]]`: Time-specific (audio/video)
+
+#### 4.2.1 Extended Element References
+
+Citations MAY include an additional element specifier to reference specific elements within a location. The general pattern is `[[item-id:location:element]]`.
+
+**Element reference formats:**
+- `[[item-id:p12:table-3]]`: Table 3 on page 12
+- `[[item-id:p12:figure-1]]`: Figure 1 on page 12
+- `[[item-id:section-3.2:para-4]]`: Paragraph 4 of section 3.2
+- `[[item-id:p5:equation-2]]`: Equation 2 on page 5
+- `[[item-id:p8:footnote-7]]`: Footnote 7 on page 8
+
+**Standard element type prefixes:**
+
+| Prefix | Element Type | Example |
+|--------|-------------|---------|
+| `table-` | Table | `[[report:p12:table-3]]` |
+| `figure-` | Figure or image | `[[report:p12:figure-1]]` |
+| `para-` | Paragraph | `[[report:section-3.2:para-4]]` |
+| `equation-` | Equation | `[[report:p5:equation-2]]` |
+| `footnote-` | Footnote | `[[report:p8:footnote-7]]` |
+| `listing-` | Code listing | `[[report:p15:listing-1]]` |
+
+Element references are OPTIONAL extensions. Implementations that do not support element-level resolution SHOULD fall back to the location-level reference (e.g., treat `[[item-id:p12:table-3]]` as equivalent to `[[item-id:p12]]`).
 
 For Inline Tezits (Level 0), citations reference context items by their `label` field rather than by `item-id`. See Section 1.4.1.
 
@@ -1151,6 +1234,53 @@ When context updates significantly, the synthesis MAY become stale:
 
 Implementations SHOULD warn users when interrogating stale tezits.
 
+#### 8.3.1 Living Document Failure Modes
+
+Linked sources may become unavailable or degrade over time. Implementations SHOULD handle these failure modes gracefully.
+
+**Source Unavailable**
+
+When a linked source is deleted, access is revoked, or the source endpoint becomes unreachable, the context item SHOULD report status `"unavailable"` with a `last_successful_sync` timestamp. The implementation SHOULD fall back to the last known good snapshot of the content.
+
+**Degraded Context**
+
+Tezits with one or more stale or unavailable linked sources SHOULD include a `context_freshness` assessment in the manifest, indicating which items are current and which are degraded.
+
+**Freshness Warnings in TIP Responses**
+
+Interrogation responses from tezits with stale or unavailable linked sources SHOULD include a freshness warning. This enables recipients to judge whether the information may be outdated before relying on it.
+
+**Context item status schema:**
+
+```json
+{
+  "context_item_status": {
+    "revenue-model": {
+      "source_status": "unavailable",
+      "last_successful_sync": "2026-01-20T10:00:00Z",
+      "fallback": "last_known_good",
+      "degraded": true
+    }
+  }
+}
+```
+
+**Source status values:**
+
+| Status | Meaning |
+|--------|---------|
+| `current` | Source is reachable and content is up to date |
+| `stale` | Source is reachable but content has not been synced within the expected frequency |
+| `unavailable` | Source is unreachable (deleted, access revoked, endpoint down) |
+| `error` | Sync attempted but failed due to an error |
+
+**Fallback values:**
+
+| Fallback | Meaning |
+|----------|---------|
+| `last_known_good` | Use the most recent successfully synced snapshot |
+| `none` | No fallback available; context item is effectively missing |
+
 ### 8.4 Version Pinning
 
 Recipients MAY pin to a specific version:
@@ -1283,6 +1413,39 @@ Reserved extension IDs:
 Custom extensions SHOULD use reverse-domain naming:
 - `com.example.custom-feature`
 - `org.company.internal-tool`
+
+### 11.5 Extension Registry
+
+The canonical extension registry is maintained at [github.com/tezit-protocol/spec/extensions/](https://github.com/tezit-protocol/spec/extensions/).
+
+#### Contribution Process
+
+Extensions are contributed via pull request to the spec repository. Each extension PR MUST include:
+
+1. **Extension manifest** (`manifest.json`) per Section 11.2
+2. **Specification document** describing the extension's schema, behavior, and use cases
+3. **At least one example** demonstrating the extension in a Tez bundle
+4. **Compatibility notes** indicating which conformance levels and profiles the extension applies to
+
+#### Namespace Conventions
+
+| Namespace Pattern | Usage | Example |
+|-------------------|-------|---------|
+| `tezit-*` | Standard extensions maintained by the Tezit Protocol community | `tezit-signing`, `tezit-facts` |
+| `{reverse-domain}.*` | Vendor-specific extensions | `com.ragu.workflow`, `com.ragu.authorization` |
+
+Vendor namespaces use reverse domain notation (e.g., `com.ragu.*` for extensions contributed by the Ragu Platform). Vendor extensions MAY be proposed for standardization through the lifecycle process below.
+
+#### Extension Lifecycle
+
+| Stage | Description | Requirements |
+|-------|-------------|-------------|
+| **Draft** | Initial proposal, under active development | PR opened with basic specification |
+| **Proposed** | Specification complete, seeking implementer feedback | At least one reference implementation |
+| **Standard** | Stable, widely implemented, part of the official registry | Two or more independent implementations, community review passed |
+| **Deprecated** | Superseded or no longer recommended | Migration guide to replacement (if any) |
+
+Extensions in the **draft** and **proposed** stages MAY change without notice. Extensions at the **standard** stage follow the same versioning guarantees as the core protocol (Section 8.1).
 
 ---
 
@@ -1799,6 +1962,7 @@ A complete example bundle is available at:
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.2.2 | 2026-02-05 | Extended citation syntax with element-type references (tables, figures, paragraphs). Living document failure modes (source unavailable, degraded context, freshness warnings). Extension registry process with PR-based contribution, vendor namespaces, and lifecycle stages. Code Review profile (proposed, contributed by Ragu Platform). Ragu Platform added as second implementer. |
 | 1.2.1 | 2026-02-05 | Added coordination profile for team collaboration (tasks, decisions, questions, blockers). Clarified context scope semantics with concrete examples. Added multi-model interrogation guidance (minimum requirements, citation verification, large context handling). Added JSON Schema references and validation section. Standardized field naming across bundle formats (`tezit_version` in JSON, `tezit` in YAML). |
 | 1.2 | 2026-02-05 | Added Inline Tez (Level 0) as new lowest conformance level. Simplified core protocol: moved Messaging Profile to Appendix A (experimental) and Parameters & Negotiation to Appendix B (experimental). Updated naming conventions: plural of Tez is "tezits" (not "tezzes"); "tezit" as a verb. Added companion specification references (TIP, HTTP API, tez:// URI). Reorganized sections for clarity. Renumbered conformance levels (0-3). |
 | 1.1 | 2026-02-05 | Added Section 1.6 Core Principles. Added Section 1.7 Tez Profiles (knowledge, messaging, decision, handoff). Added `profile` and `surface` fields to manifest schema. Added `tezit-facts` and `tezit-relationships` standard extensions. |

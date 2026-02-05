@@ -1,6 +1,6 @@
 # Tez Interrogation Protocol (TIP)
 
-**Version**: 1.0
+**Version**: 1.0.2
 **Status**: Draft
 **Last Updated**: February 5, 2026
 **Companion To**: Tezit Protocol Specification v1.2
@@ -96,13 +96,19 @@ Full TIP conformance requires compliance with all requirements defined in this s
 
 #### 1.5.2 TIP Lite
 
-TIP Lite is designed for small-context tezits where the total context is under 32,768 tokens and a full RAG pipeline is unnecessary. TIP Lite conformance requires:
+TIP Lite is designed for small-context tezits where the total context fits comfortably within a single prompt and a full RAG pipeline is unnecessary. TIP Lite conformance requires:
 
 1. **Full prompt loading**: All context items MUST be loaded directly into the prompt. No chunking, embedding, or retrieval pipeline is needed. This corresponds to the "Small Context" strategy defined in Section 10.2.1.
 2. **Simplified response classification**: Only two classifications are used — **grounded** (Section 6.1) and **abstention** (Section 6.4). The "inferred" and "partial" classifications are not required.
 3. **Reduced compliance tests**: Implementations MUST pass three of the seven required tests — the grounding test (Section 11.2), the abstention test (Section 11.3), and the hallucination resistance test (Section 11.4).
 4. **Stateless query/response**: No interrogation session protocol (Section 8) is required. Each query is independent; no session state is maintained between queries.
 5. **Citation format**: The citation format `[[item-id:location]]` defined in Section 5 MUST be used without modification. Citations are not optional in TIP Lite.
+
+**TIP Lite Context Threshold:**
+
+- The MINIMUM threshold for TIP Lite eligibility is **32,768 tokens**. Tezits with total context at or above this token count MUST NOT use TIP Lite unless the implementation raises the threshold as described below.
+- Implementations MAY raise the threshold based on the model's context window capacity. The RECOMMENDED formula is: TIP Lite applies when the total context is under **25% of the model's available context window**. For example, a model with a 200K-token context window would set the TIP Lite threshold at 50,000 tokens.
+- An implementation MAY claim full TIP compliance while using the TIP Lite strategy (full prompt loading without a RAG pipeline) when the total context happens to be small enough to load entirely. This is not a contradiction — it is simply a full TIP implementation whose context loading strategy for a particular tez is "small context" (Section 10.2.1).
 
 TIP Lite is appropriate for use cases such as team messaging, short memos, personal notes with a few attachments, and other scenarios where the total context comfortably fits within a single prompt.
 
@@ -366,6 +372,7 @@ You MUST follow these rules without exception:
    - [[item-id:L42-L50]] for lines 42-50
    - [[item-id:section-name]] for a named section
    - [[item-id:t0:15:30]] for a timestamp
+   - [[item-id:p12:table-3]] for a specific element (table, figure) at a location
 
 3. ABSTENTION: If you cannot answer a question from the provided context, say:
    "The bundled context does not contain information about [topic]. The context
@@ -562,6 +569,35 @@ References a specific field within a structured data (JSON/XML) context item.
 
 Examples:
 > The API rate limit is configured at 1000 requests per minute [[config:$.api.rateLimit.maxRequests]].
+
+#### 5.1.8 Element Citation
+
+Format: `[[item-id:location:element]]`
+
+References a specific element (table, figure, paragraph, etc.) within a location. The element specifier is OPTIONAL and extends any location specifier defined in Sections 5.1.2 through 5.1.4.
+
+General pattern: `[[item-id:location:element]]` where `element` identifies a specific sub-element at the given location.
+
+**Element types:**
+
+| Element Pattern | Description |
+|-----------------|-------------|
+| `table-N` | Table N (1-indexed) at the specified location |
+| `figure-N` | Figure N (1-indexed) at the specified location |
+| `para-N` | Paragraph N (1-indexed) within the specified section or page |
+| `chart-N` | Chart N (1-indexed) at the specified location |
+| `code-N` | Code block N (1-indexed) at the specified location |
+
+Examples:
+> The revenue breakdown is shown in table 3 on page 12 of the report [[annual-report:p12:table-3]].
+
+> Figure 1 on page 12 illustrates the growth trend [[annual-report:p12:figure-1]].
+
+> The key finding is stated in paragraph 4 of Section 3.2 [[research-paper:section-3.2:para-4]].
+
+> The pricing tiers are listed in the first table of the executive summary [[proposal:executive-summary:table-1]].
+
+Implementations MUST support element citations for at least `table-N` and `figure-N`. Support for `para-N`, `chart-N`, and `code-N` is RECOMMENDED. If an element specifier is not supported or the referenced element cannot be resolved, the implementation SHOULD fall back to the location-only citation (e.g., `[[item-id:p12]]`) and MUST NOT reject the citation as invalid.
 
 ### 5.2 Multi-Source Citations
 
@@ -775,6 +811,69 @@ For partial responses:
   }
 }
 ```
+
+### 6.6 Retrieval Transparency Metadata
+
+Citation entries MAY include OPTIONAL retrieval metadata that exposes how each cited chunk was retrieved. This metadata enables debugging, trust calibration, and retrieval pipeline optimization.
+
+```json
+{
+  "citations": [
+    {
+      "item_id": "financial-model",
+      "location": "Sheet2:B12",
+      "verified": true,
+      "retrieval": {
+        "method": "hybrid",
+        "vector_score": 0.89,
+        "keyword_score": 0.72,
+        "hybrid_score": 0.83,
+        "rank": 1,
+        "chunk_tokens": 412
+      }
+    }
+  ]
+}
+```
+
+**Retrieval metadata fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `method` | string | The retrieval method that produced this result: `"semantic"`, `"keyword"`, `"hybrid"`, or `"exhaustive"`. |
+| `vector_score` | number | Cosine similarity score from vector/semantic search (0.0 to 1.0). Present when `method` is `"semantic"` or `"hybrid"`. |
+| `keyword_score` | number | BM25 or TF-IDF relevance score from keyword search. Present when `method` is `"keyword"` or `"hybrid"`. |
+| `hybrid_score` | number | Combined score after rank fusion. Present when `method` is `"hybrid"`. |
+| `rank` | integer | The position of this chunk in the retrieval result set (1-indexed). |
+| `chunk_tokens` | integer | The token count of the retrieved chunk. |
+
+This metadata is OPTIONAL. Platforms that expose retrieval transparency data enable better debugging and trust calibration, but implementations MUST NOT require retrieval metadata in citations. Consumers of TIP responses MUST NOT depend on retrieval metadata being present. The `retrieval` field MAY be omitted entirely from any citation entry.
+
+### 6.7 Context Freshness
+
+For tezits that contain linked or living sources (context items that may be updated after the tez was created), TIP responses SHOULD include context freshness metadata. This helps recipients understand whether the grounded response reflects current information or potentially stale data.
+
+```json
+{
+  "context_freshness": {
+    "all_current": false,
+    "stale_items": ["revenue-model"],
+    "warning": "1 of 5 context items has not been refreshed since 2026-01-20"
+  }
+}
+```
+
+**Context freshness fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `all_current` | boolean | `true` if all context items are at their latest known version; `false` if one or more items may be stale. |
+| `stale_items` | array of strings | The `item-id` values of context items that have not been refreshed since their last known update. Empty array if `all_current` is `true`. |
+| `warning` | string | A human-readable summary of the freshness status, suitable for display to the recipient. Present only when `all_current` is `false`. |
+
+Context freshness metadata is OPTIONAL. Implementations that track source freshness (e.g., via linked URLs, last-modified timestamps, or webhook-based update notifications) SHOULD include this field in responses. Implementations that do not track freshness MAY omit the `context_freshness` field entirely.
+
+When `all_current` is `false`, implementations SHOULD include the freshness warning in the response text or as a visible indicator in the user interface, so that recipients are aware that some cited context may be outdated.
 
 ---
 
@@ -1316,7 +1415,30 @@ The hybrid strategy SHOULD weight results using Reciprocal Rank Fusion (RRF) or 
 - Top-k retrieval: 10-20 chunks
 - Re-ranking: Apply a cross-encoder re-ranker on the top-k results (OPTIONAL but RECOMMENDED for improved precision).
 
-#### 10.1.7 Retrieval Provenance
+#### 10.1.7 Retrieval Strategy Hints
+
+Queries MAY include a `retrieval_strategy` hint that advises the implementation on how to perform retrieval for that query. This allows callers to trade off between latency and thoroughness.
+
+```json
+{
+  "query": "Compare the financial projections with the executive memo claims",
+  "retrieval_strategy": "multi_pass"
+}
+```
+
+**Supported strategies:**
+
+| Strategy | Description |
+|----------|-------------|
+| `single_pass` | (Default) Single retrieval pass per query. The implementation performs one round of embedding lookup and/or keyword search, ranks results, and returns the top-k chunks. Appropriate for straightforward factual queries. |
+| `multi_pass` | Query decomposition into sub-queries, parallel retrieval, merge and deduplication, and re-ranking. Appropriate for complex queries that span multiple context items or require cross-referencing (e.g., comparison queries, aggregation queries). The implementation SHOULD decompose the query into two or more sub-queries, retrieve independently for each, merge the result sets, deduplicate overlapping chunks, and re-rank the merged set. |
+| `exhaustive` | Search all context items without retrieval filtering. Appropriate for small tezits where the total context can be scanned in full, or for gap analysis queries where comprehensive coverage is more important than precision. Implementations MAY treat this as equivalent to full prompt loading (Section 10.2.1) if the context fits within the model's context window. |
+
+Implementations MUST support `single_pass`. Support for `multi_pass` and `exhaustive` is RECOMMENDED. If a query requests an unsupported strategy, the implementation MUST fall back to `single_pass` and SHOULD indicate the fallback in the response metadata.
+
+The retrieval strategy hint is advisory. Implementations MAY override the hint if the context size or system constraints make the requested strategy impractical (e.g., `exhaustive` on a 500,000-token tez).
+
+#### 10.1.8 Retrieval Provenance
 
 For every chunk retrieved, the system MUST track:
 
@@ -1404,7 +1526,7 @@ Implementations MAY include transcription confidence metadata (e.g., word-level 
 Implementations SHOULD:
 1. Preserve word-level or segment-level confidence scores when available from the transcription pipeline.
 2. Flag segments with confidence below a configurable threshold (RECOMMENDED default: 0.7) as potentially unreliable.
-3. Include transcription confidence in the provenance metadata tracked per Section 10.1.7.
+3. Include transcription confidence in the provenance metadata tracked per Section 10.1.8.
 
 ### 10.3 Model Requirements
 
@@ -2384,6 +2506,38 @@ TIP 1.0 defines the following extension points for future minor versions:
 5. **Additional hosting models**: New hosting configurations may be defined.
 6. **Additional compliance tests**: New required tests may be added to the suite.
 7. **Streaming responses**: Streaming interrogation responses are specified in the companion Tez HTTP API Specification (Section 5.2, `POST /api/v1/tez/{id}/interrogate/stream`). Implementations supporting streaming MUST use Server-Sent Events (SSE) format. The streaming response MUST include the same grounding guarantees as non-streaming responses — citation verification and response classification MUST be applied to the complete response.
+
+   **SSE Event Types for Streaming Interrogation**
+
+   Implementations supporting streaming MUST use the following SSE event types:
+
+   ```
+   event: tip.session.start
+   data: {"session_id": "...", "tez_id": "..."}
+
+   event: tip.token
+   data: {"delta": "The revenue increased by "}
+
+   event: tip.citation
+   data: {"item_id": "revenue-report", "location": "p3", "text_excerpt": "Revenue grew 23% YoY", "verified": true}
+
+   event: tip.token
+   data: {"delta": "23% year-over-year [[revenue-report:p3]]."}
+
+   event: tip.response.end
+   data: {"classification": "grounded", "confidence": "high", "citation_count": 5}
+   ```
+
+   **Event semantics:**
+
+   | Event | Description |
+   |-------|-------------|
+   | `tip.session.start` | Emitted once at the beginning of a streaming session. Contains session and tez identifiers. |
+   | `tip.token` | Emitted for each text fragment (token or token group) of the response. The `delta` field contains the incremental text. |
+   | `tip.citation` | Emitted DURING generation as soon as the RAG pipeline identifies a grounded reference. This enables progressive trust-building: recipients see citation verification in real time rather than waiting for the complete response. |
+   | `tip.response.end` | Emitted once when the response is complete. Contains the final response classification, confidence level, and total citation count. |
+
+   Citation events (`tip.citation`) are emitted inline with token events. Implementations MUST ensure that each `tip.citation` event corresponds to a citation reference that appears (or will appear) in the adjacent `tip.token` events. The `tip.response.end` event MUST NOT be emitted until all citation verification is complete.
 8. **Multi-modal responses**: Responses that include generated diagrams or visualizations alongside text.
 
 ---
@@ -2456,6 +2610,7 @@ You MUST follow these rules without exception:
    - [[item-id:L42-L50]] for lines 42-50
    - [[item-id:section-name]] for a named section
    - [[item-id:t0:15:30]] for a timestamp
+   - [[item-id:p12:table-3]] for a specific element (table, figure) at a location
 
 3. ABSTENTION: If you cannot answer a question from the provided context, say:
    "The bundled context does not contain information about [topic]. The context
@@ -2694,6 +2849,7 @@ Response (200 OK):
 |---------|------|---------|
 | 1.0 | 2026-02-05 | Initial specification |
 | 1.0.1 | 2026-02-05 | Added TIP Lite conformance level for small-context tezits (Section 1.5.2). Connected streaming responses to HTTP API spec (Section 15.7). Added reference test bundle guidance (Section 11.11). Added audio transcription quality considerations (Section 10.2.5). |
+| 1.0.2 | 2026-02-05 | Ragu Platform feedback integration. Expanded streaming citations with SSE event types (Section 15.7). Clarified TIP Lite threshold to support enterprise context windows (Section 1.5.2). Added retrieval strategy hints for queries (Section 10.1.7). Added retrieval transparency metadata in citations (Section 6.6). Added context freshness metadata for living sources (Section 6.7). Added element-level citation syntax for tables, figures, and paragraphs (Section 5.1.8). |
 
 ---
 
