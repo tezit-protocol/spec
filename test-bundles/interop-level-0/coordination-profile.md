@@ -1,8 +1,8 @@
 ---
-tezit_version: "1.2"
+tezit: "1.2"
 title: "Sprint 14 Coordination"
 type: coordination
-profile: coordination
+profile: decision
 creator:
   name: "Project Orchestrator"
   email: "orchestrator@ragu.ai"
@@ -17,6 +17,7 @@ permissions:
   reshare: true
 surface:
   item_type: task
+  title: "Sprint 14: Implement Rate Limiting Middleware"
   status: in_progress
   priority: high
   assignee:
@@ -66,4 +67,4 @@ Sarah noted that the existing `RateLimitMiddleware` in `ragu-cache` handles in-m
 - [ ] Tests
 
 ---
-*Tezit v1.2 | Profile: coordination | Context: 2 items | 2026-02-03*
+*Tezit v1.2 | Profile: decision | Context: 2 items | 2026-02-03*

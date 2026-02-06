@@ -1,5 +1,5 @@
 ---
-tezit_version: "1.2"
+tezit: "1.2"
 title: "Code Review: Auth Token Refresh"
 type: review
 profile: code_review
@@ -16,20 +16,22 @@ permissions:
   fork: true
   reshare: false
 surface:
+  review_id: "review-pr-287-2026-02-04"
   review_type: pull_request
-  verdict: changes_requested
-  severity_summary:
-    critical: 1
-    high: 1
-    medium: 2
-    low: 0
-    informational: 1
+  overall_verdict: request_changes
+  findings_count:
+    total: 5
+    by_severity:
+      critical: 1
+      high: 1
+      medium: 2
+      low: 0
+      info: 1
   observation_summary:
     issues: 4
-    praise: 1
+    praises: 1
     questions: 0
     notes: 0
-  finding_count: 5
   repository: "github.com/ragu-platform/internal-api"
   branch: "feature/token-refresh"
   base_branch: "main"
