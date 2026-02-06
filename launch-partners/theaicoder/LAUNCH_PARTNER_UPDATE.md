@@ -1,22 +1,33 @@
-# Tezit Launch Partner Update (TheAICoder)
+# Tezit Launch Partner Update (TheAICoderV2)
 
 Date: 2026-02-06
 
 ## Executive Summary
 
-TheAICoderV2 is implementing Tezit Protocol v1.2 by making **Tez bundles** the canonical, portable artifact for AI coding work. We currently support:
+TheAICoderV2 is implementing **Tezit Protocol v1.2** by making **Tez bundles** the canonical, portable artifact for AI coding work.
 
-- Tez bundle storage in Postgres
-- Session-to-Tez export (`.tez` archive)
-- TIP Lite interrogation (context-only answering, mandatory citations, abstention)
-- Interrogation session persistence + SSE streaming
-- Platform discovery via `/.well-known/tezit.json`
+What we ship today:
 
-We are not yet claiming full Tezit HTTP API conformance (e.g. `/api/v1/tez` CRUD, forking/versioning, full share/import semantics). That is queued in follow-ups below.
+- **Portable `.tez` export** (ZIP archive with `manifest.json` + `context/` + synthesis) with SHA-256 hashes for context items
+- **Hosted bundle storage** in Postgres (bundle metadata, context items, share links, interrogation sessions)
+- **TIP Lite interrogation** (answers grounded in bundle context only, mandatory citations, abstention) with **SSE streaming**
+- **Spec-compatible `/api/v1/tez/*` endpoints** (owner-only MVP for now)
+- **`.tez` import MVP**: upload archive, validate manifest, persist bundle + items, enable interrogation
+- **Forking + lineage endpoints** (owner-only MVP for now)
+- **TIP streaming taxonomy on `/api/v1`**: emits `tip.*` SSE events (minimal mapping for TIP Lite)
+- **Canonical `tez://...` URIs** for bundles
+- **Platform discovery** at `GET /.well-known/tezit.json`
+
+What we have not shipped yet (interop backlog):
+
+- Versioning endpoints (`/versions`) and diffs
+- Share-scoped access control for `/api/v1` endpoints (currently owner-only)
+- TIP Enterprise addendum features that require retrieval (retrieval transparency, multi-pass retrieval)
+- Extensions like signing/encryption
 
 ---
 
-## What We’ve Implemented (Code References)
+## What We've Implemented (Code References)
 
 ### 1) Tez Bundle Data Model (DB)
 
@@ -62,11 +73,33 @@ We are not yet claiming full Tezit HTTP API conformance (e.g. `/api/v1/tez` CRUD
 
 ### 7) Discovery Document
 
-- `/.well-known/tezit.json`: `public/.well-known/tezit.json`
+- `GET /.well-known/tezit.json`: `src/app/.well-known/tezit.json/route.ts`
+
+### 8) Spec-Compatible HTTP API (`/api/v1/tez/*`) + Import
+
+- Base paths:
+  - `GET /api/v1/tez`
+  - `GET /api/v1/tez/{id}`
+  - `GET /api/v1/tez/{id}/synthesis`
+  - `GET /api/v1/tez/{id}/context`
+  - `GET /api/v1/tez/{id}/context/{itemId}`
+  - `GET /api/v1/tez/{id}/archive`
+  - `POST /api/v1/tez/{id}/interrogate`
+  - `POST /api/v1/tez/{id}/interrogate/stream`
+- `.tez` import:
+  - `POST /api/v1/tez/import`
+
+### 9) Forking + Lineage (v1)
+
+- `POST /api/v1/tez/{id}/fork`
+- `GET /api/v1/tez/{id}/forks`
+- `GET /api/v1/tez/{id}/lineage`
+
+Note: these are currently **owner-only** while we wire share-scoped permissions.
 
 ---
 
-## How We’re Using Tezit (Product Integration)
+## How We're Using Tezit (Product Integration)
 
 - **Code Review Profile**: AI coding sessions export as `code_review` Tez bundles with context items representing prompts, AI responses, code changes, terminal output, and errors.
 - **TIP**: Anyone with access to the bundle can interrogate it with grounding + citations, enabling community trust and auditability.
@@ -74,30 +107,9 @@ We are not yet claiming full Tezit HTTP API conformance (e.g. `/api/v1/tez` CRUD
 
 ---
 
-## Known Gaps / Follow-Ups (Near-Term)
+## Proposed Interop Milestones (Next)
 
-P0 (alignment + correctness) - DONE:
-- Canonical `tez://` URIs (host from `NEXT_PUBLIC_APP_URL`, owner from username)
-- Context item ID consistency (`ctx-000` everywhere)
-- Share link consumption page: `GET /tez/share/{token}` (public, view-only)
-- Honest `/.well-known/tezit.json` (truthful capability flags; `api_base` points to current partner endpoints)
-
-P1 (interoperability):
-- Add a Tezit-compatible API surface under `/api/v1/tez/*` (CRUD + context listing/download + interrogation) as a compatibility layer.
-- Add `.tez` import MVP for export/import round-tripping.
-
-P2 (protocol depth):
-- Forking + lineage tree endpoints
-- Versioning semantics + diff endpoints
-- Extensions (facts/relationships/signing)
-- TIP Enterprise event taxonomy + retrieval transparency
-
----
-
-## Questions For Tezit (So We Implement the Right Way)
-
-1. Do you expect launch partners to implement the full `/api/v1/tez/*` surface immediately, or is a staged rollout (discovery + `.tez` export + TIP Lite first) acceptable?
-2. Is there a preferred convention for **context item IDs** inside bundles?
-   - UUIDs are machine-friendly; human slugs are readable. We can support both via stable mapping.
-3. For `.tez` archives, do you require a specific context file naming convention (e.g. `context/{item_id}.md`), or is an index-based naming acceptable if the manifest is correct?
-4. Do you want strict adherence to the TIP Enterprise SSE event type naming (e.g. `tip.session.start`, `tip.token`, `tip.citation`), or is a partner-defined event schema acceptable initially?
+1. **Versioning endpoints**: `/api/v1/tez/{id}/versions` and point-in-time fetches.
+2. **Share-scoped `/api/v1` access**: allow Tezit clients to use share tokens instead of owner-only auth.
+3. **TIP Enterprise addendum (retrieval-dependent)**: retrieval transparency + multi-pass retrieval strategies once we introduce retrieval.
+4. **Extensions**: facts/relationships and optional signing/encryption.
