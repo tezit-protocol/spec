@@ -229,34 +229,8 @@
     },
     "surface": {
       "type": "object",
-      "description": "Surface message for Messaging Profile tezits. The human-readable message that recipients see before diving into context. Experimental -- see Appendix A of the protocol spec.",
-      "required": ["message"],
-      "properties": {
-        "message": {
-          "type": "string",
-          "description": "The human-readable surface message.",
-          "minLength": 1,
-          "examples": ["Want to see a movie this weekend?"]
-        },
-        "tone": {
-          "type": "string",
-          "description": "Tone of the surface message.",
-          "enum": ["formal", "casual", "urgent", "friendly", "neutral"],
-          "examples": ["casual"]
-        },
-        "urgency": {
-          "type": "string",
-          "description": "Urgency level of the message.",
-          "enum": ["critical", "high", "normal", "low", "fyi"],
-          "examples": ["low"]
-        },
-        "actionRequested": {
-          "type": "string",
-          "description": "What the sender wants the recipient to do.",
-          "examples": ["Let me know what works"]
-        }
-      },
-      "additionalProperties": false
+      "description": "Profile-specific surface metadata. Structure is defined by the profile specified in the 'profile' field. See companion profile schemas for field definitions.",
+      "additionalProperties": true
     },
     "conversation": {
       "type": "object",

@@ -31,7 +31,7 @@ Recipients must trust the summary or reverse-engineer the work. Phone calls are 
 
 **Tezit** is an open protocol for transmitting knowledge with its scaffolding intact.
 
-A **Tez** (plural: **Tezzes**) is a bundle that carries:
+A **Tez** (plural: **tezits**) is a bundle that carries:
 - The **synthesis** (the insight, recommendation, or position)
 - The **context** (the source materials that informed it)
 - The **conversation** (the AI dialogue that produced it)
@@ -248,7 +248,7 @@ The AI dialogue that produced the synthesis:
 
 #### params.json
 
-Negotiable parameters for deal-oriented Tezzes:
+Negotiable parameters for deal-oriented tezits:
 
 ```json
 {
@@ -307,20 +307,20 @@ Tezit.com provides:
 - **Vaults** for Tez storage
 - **Versions** for Tez history
 - **Interrogations** for AI-powered Q&A
-- **Discussions** for context around Tezzes
+- **Discussions** for context around tezits
 - **Forks** for counter-arguments
 
 #### For Individuals
 
-- Store your Tezzes privately or publicly
+- Store your tezits privately or publicly
 - Build a portfolio of your analytical work
-- Share Tezzes with specific people or via link
-- Fork public Tezzes to learn from experts
+- Share tezits with specific people or via link
+- Fork public tezits to learn from experts
 
 #### For Teams
 
 - Shared vaults with access controls
-- Review workflows for sensitive Tezzes
+- Review workflows for sensitive tezits
 - Audit trails for compliance
 - Integration with existing tools (Slack, Teams, email)
 
@@ -336,8 +336,8 @@ Tezit.com provides:
 The Tezit protocol is **open source** and **vendor-neutral**.
 
 Anyone can:
-- Create Tezzes in any tool
-- Host Tezzes on any storage
+- Create tezits in any tool
+- Host tezits on any storage
 - Build Tezit-compatible applications
 - Contribute to the protocol specification
 
@@ -357,7 +357,7 @@ tezit-protocol/
 │   └── tezit/
 ├── typescript/              # TypeScript SDK
 │   └── @tezit/core
-├── examples/                # Example Tezzes
+├── examples/                # Example tezits
 └── tools/                   # CLI and validation tools
 ```
 
@@ -393,7 +393,7 @@ tezit-protocol/
 
 **Before Tezit**: Senior employee leaves. Knowledge transfer happens through hurried documentation and handoff meetings. Institutional knowledge is lost.
 
-**With Tezit**: Senior employee creates Tezzes for key decisions and analyses. New employees interrogate to understand the reasoning. The organization's analytical heritage is preserved.
+**With Tezit**: Senior employee creates tezits for key decisions and analyses. New employees interrogate to understand the reasoning. The organization's analytical heritage is preserved.
 
 ---
 
@@ -401,7 +401,7 @@ tezit-protocol/
 
 ### Storage
 
-Tezzes are self-contained bundles that can be stored anywhere:
+Tezits are self-contained bundles that can be stored anywhere:
 - Local filesystem
 - Cloud storage (S3, GCS, Azure Blob)
 - Tezit.com vaults
@@ -420,7 +420,7 @@ The protocol supports multiple auth models:
 
 ### Encryption
 
-Tezzes can be encrypted at rest and in transit:
+Tezits can be encrypted at rest and in transit:
 - **At rest**: AES-256-GCM per-bundle encryption
 - **In transit**: TLS 1.3 minimum
 - **End-to-end**: Optional recipient-specific encryption
@@ -454,7 +454,7 @@ Protocol changes follow a structured process:
 2. **Discussion**: Community feedback period (minimum 30 days)
 3. **Consensus**: Foundation board votes on adoption
 4. **Implementation**: Reference implementation updated
-5. **Transition**: Migration period for existing Tezzes
+5. **Transition**: Migration period for existing tezits
 
 ### Versioning
 
@@ -463,7 +463,7 @@ The protocol uses semantic versioning:
 - **Minor**: New optional features
 - **Patch**: Clarifications and bug fixes
 
-Tezzes include the protocol version, enabling tools to handle different versions.
+Tezits include the protocol version, enabling tools to handle different versions.
 
 ---
 
@@ -598,7 +598,7 @@ Tezit is an open invitation to rethink knowledge transmission for the AI era. We
 - **AI augments human judgment, it doesn't replace it**
 
 If you share these beliefs, join us:
-- **Use Tezit**: Create and share Tezzes in your work
+- **Use Tezit**: Create and share tezits in your work
 - **Build with Tezit**: Integrate the protocol into your tools
 - **Contribute**: Help evolve the protocol specification
 - **Spread the word**: Share this manifesto
@@ -618,7 +618,7 @@ If you share these beliefs, join us:
 | **Parameters** | Negotiable assumptions or terms |
 | **Interrogation** | AI-powered Q&A against transmitted context |
 | **Fork** | Creating a new Tez from an existing one |
-| **Vault** | A storage location for Tezzes |
+| **Vault** | A storage location for tezits |
 | **Manifest** | The JSON file describing a Tez's structure |
 
 ## Appendix B: Protocol Schemas
@@ -638,7 +638,7 @@ See the full JSON schemas at [github.com/tezit-protocol/spec/spec](https://githu
 - Audit logs track access
 
 ### Privacy
-- Tezzes can be encrypted
+- Tezits can be encrypted
 - Context can be selectively redacted
 - No analytics without consent
 

@@ -51,9 +51,9 @@ The following companion documents extend the Tezit Protocol with detailed protoc
 
 | Document | Description | Status |
 |----------|-------------|--------|
-| **Tez Interrogation Protocol (TIP)** | Detailed wire protocol for interrogation sessions, including streaming, session management, and multi-turn grounded Q&A | Planned |
-| **Tez HTTP API** | RESTful API specification for creating, sharing, interrogating, and managing tezits over HTTP | Planned |
-| **`tez://` URI Scheme** | URI scheme for referencing tezits, context items, and specific locations within tezits (e.g., `tez://acme-analysis/context/doc-001:p12`) | Planned |
+| **Tez Interrogation Protocol (TIP)** | Detailed wire protocol for interrogation sessions, including streaming, session management, and multi-turn grounded Q&A | Stable (v1.0.3) |
+| **Tez HTTP API** | RESTful API specification for creating, sharing, interrogating, and managing tezits over HTTP | Stable (v1.0) |
+| **`tez://` URI Scheme** | URI scheme for referencing tezits, context items, and specific locations within tezits (e.g., `tez://acme-analysis/context/doc-001:p12`) | Stable |
 | **Coordination Profile Specification** | Full specification for the Coordination Profile (tasks, decisions, questions, blockers) with status state machine, dependency modeling, periodic review cadence, escalation patterns, and dashboard aggregation | v1.1-draft (Ragu Platform) |
 | **Code Review Profile Specification** | Profile specification for code review workflows with structured findings, severity levels, code-specific citations, fork semantics, and integration guidance | v0.2.0 Proposed (Ragu Platform) |
 | **TIP Enterprise Addendum** | Enterprise extensions to TIP: streaming SSE protocol, FGA-scoped interrogation, retrieval transparency, multi-pass retrieval, multi-tenant isolation, high-throughput guidance, and tezit-eval quality metrics | v1.1-draft (Ragu Platform) |
@@ -505,6 +505,8 @@ These schemas are also available in the `schemas/` directory of the [spec reposi
 
   "profile": "string (OPTIONAL: 'knowledge' | 'messaging' | 'coordination' | 'code_review' | 'review' | 'decision' | 'handoff')",
 
+  "surface": "object (OPTIONAL, profile-specific surface metadata; structure defined by profile)",
+
   "synthesis": {
     "title": "string (REQUIRED)",
     "type": "string (REQUIRED)",
@@ -563,7 +565,7 @@ These schemas are also available in the `schemas/` directory of the [spec reposi
 }
 ```
 
-Note: The `parameters` and `surface` fields from v1.1 are moved to experimental extensions. See Appendix A (Messaging Profile) and Appendix B (Parameters & Negotiation).
+Note: The `parameters` field from v1.1 is moved to an experimental extension. See Appendix B (Parameters & Negotiation). The `surface` field remains in the core schema as an optional, profile-specific object. Its structure varies by profile -- see Section 1.8.2 (Coordination), Section 1.8.3 (Code Review), and Appendix A (Messaging) for profile-specific surface schemas.
 
 ### 3.2 Required Fields
 
