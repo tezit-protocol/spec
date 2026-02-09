@@ -1,83 +1,75 @@
-# MyPA - Tezit Protocol Launch Partner
+# MyPA.chat — Tezit Protocol Launch Partner
 
-**Implementation:** MyPA (https://app.mypa.chat)
+**Implementation:** MyPA.chat (https://app.mypa.chat)
 **Status:** Production (6+ months)
 **Protocol Version:** v1.2.4
 **TIP Version:** v1.0.3
 **Profiles:** knowledge, messaging, coordination
+**Source:** [github.com/ragurob/MyPA.chat](https://github.com/ragurob/MyPA.chat) (monorepo)
 
 ---
 
 ## Overview
 
-MyPA is a production Tezit Protocol implementation with 6+ months of real-world experience, 544 automated tests, and 100K+ context entries in production.
+MyPA.chat is a production Tezit Protocol implementation with 6+ months of real-world deployment, 800+ automated tests across 4 services, and 100K+ context entries in production.
 
-**Key Contributions:**
-- ✅ **Tez Discovery Protocol** - Reference implementation for navigating 100K+ tezits
-- ✅ **Security Guidelines** - Prompt injection defense and TIP citation verification
-- ✅ **Protocol Extensions** - Email transport, fork semantics, engagement signals
-- ✅ **Production Metrics** - Performance benchmarks and operational lessons
+**Architecture:** Four services in a monorepo, powered by OpenClaw (AI runtime):
+- **backend/** — API server: Tez CRUD, Library (FTS5), TIP interrogation, auth
+- **relay/** — Messaging relay: teams, contacts, conversations, threading, context layers
+- **pa-workspace/** — Google Workspace: PA email, calendar, drive, Tez email transport
+- **canvas/** — Tezit Messenger: WhatsApp-style UI for teams, DMs, context
 
----
-
-## Implementation Details
-
-**Stack:**
-- Backend: Express + TypeScript + Drizzle ORM + SQLite
-- Frontend: React 18 + Vite + TypeScript + TailwindCSS
-- AI: OpenClaw Runtime (Claude Sonnet 4.5)
-- Search: SQLite FTS5 with Porter stemming
-- Testing: Vitest (544 tests, 21 test files)
-
-**Production Characteristics:**
-- Database: ~500MB at 25K context entries
-- Search Index: ~50MB FTS5 (10% overhead)
-- Query Latency: p99 <10ms for search, <2ms for ID lookups
-- Scale: Handles 100K+ entries with sub-millisecond queries
+**Key capabilities:**
+- Full TIP interrogation with citation verification
+- FTS5 Discovery Protocol (sub-10ms at 100K+ entries)
+- Fork semantics (counter, extension, reframe, update)
+- Email transport (Tez via email with protocol headers)
+- Multi-layer prompt injection defense
+- Engagement scoring (interrogation-weighted)
 
 ---
 
 ## Documents in This Directory
 
+### [CONTRIBUTION_OFFER.md](./CONTRIBUTION_OFFER.md)
+Formal contribution offer to the Tezit ecosystem: new spec proposals (public TIP endpoints, email transport, discovery protocol), reference implementations, answers to TheAICoder's open questions, and interoperability testing.
+
 ### [PRODUCTION_LEARNINGS.md](./PRODUCTION_LEARNINGS.md)
-Comprehensive learnings from 6+ months of production deployment covering:
-- Tez Discovery at Scale (FTS5, engagement scoring, browse mode)
-- Security & Prompt Injection (multi-layer defense, TIP security)
-- Protocol Extensions (email transport, fork semantics, mirrors)
-- Operational Lessons (database architecture, testing, CI/CD)
+Comprehensive learnings from 6+ months of production deployment covering discovery at scale, security and prompt injection defense, protocol extensions, and operational lessons.
 
 ### [CONFORMANCE_MATRIX.md](./CONFORMANCE_MATRIX.md)
 Detailed conformance to Tezit Protocol v1.2.4 and TIP v1.0.3 specifications.
 
 ### [PROTOCOL_PROPOSALS.md](./PROTOCOL_PROPOSALS.md)
-Specific proposals for Tezit Protocol v1.3 based on production experience.
+Seven specific proposals for Tezit Protocol v1.3 based on production experience: discovery protocol, security guidelines, email transport, fork semantics, engagement metadata, mirror distinction, and reference test fixtures.
 
 ---
 
 ## Production URLs
 
-- **Production App:** https://app.mypa.chat
-- **API Health:** https://app.mypa.chat/health
-- **Source Code:** https://github.com/ragurob/tezmob (MIT License)
-- **Protocol Discovery:** https://app.mypa.chat/.well-known/tezit.json
+| URL | Purpose |
+|-----|---------|
+| https://app.mypa.chat | Production API |
+| https://oc.mypa.chat | OpenClaw Gateway + Canvas UI |
+| https://app.mypa.chat/.well-known/tezit.json | Protocol discovery |
+| https://app.mypa.chat/health/live | Health check |
 
 ---
 
-## Test User (Production)
+## Test Credentials (Production)
 
 ```
-Email: test@test.com
+Email:    test@test.com
 Password: testtest1
 ```
 
-Available for Tezit Protocol implementers to test interoperability.
+Available for other Tezit Protocol implementers to test interoperability.
+
+Login: `POST https://app.mypa.chat/api/auth/login`
 
 ---
 
 ## Contact
 
-Available for questions, collaboration, and interoperability testing.
-
-**Repository:** https://github.com/ragurob/tezmob
-**Documentation:** See docs/ directory in repo
-**Protocol Alignment:** Follows MYPA_ALIGNMENT_GUIDE.md from this spec repo
+**Repository:** [github.com/ragurob/MyPA.chat](https://github.com/ragurob/MyPA.chat)
+**Available for:** Questions, collaboration, interoperability testing, code review
