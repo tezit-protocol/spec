@@ -2,7 +2,7 @@
 
 **Status:** Production-Ready Guidance (February 2026)
 **Maintainer:** Tezit Protocol Working Group + MyPA Launch Partner
-**Last Updated:** February 8, 2026
+**Last Updated:** February 10, 2026
 
 ---
 
@@ -100,7 +100,27 @@ Your system imports bundle → TIP interrogation compromised
 
 ## Documentation Structure
 
-### 1. [PROMPT_INJECTION_PREVENTION_2026.md](./PROMPT_INJECTION_PREVENTION_2026.md)
+### 1. [SECURITY_AUDIT_LOG.md](./SECURITY_AUDIT_LOG.md) ⭐ **START HERE**
+
+**Comprehensive security tracking document** — every consideration identified across the ecosystem.
+
+**Contents:**
+- **133 security items** catalogued with status tracking
+- **Protocol-level vulnerabilities** (64 items) — prompt injection, archive security, URI attacks
+- **Relay infrastructure vulnerabilities** (17 items) — all fixed in commit f9b51f5
+- **Website/API security** (15 items) — auth, XSS, CSRF, input validation
+- **Federation security** (10 items) — identity, trust models, SSRF protection
+- **Operational security** (12 items) — secrets, backups, monitoring
+- **Outstanding considerations** (15 items) — future work, research topics
+
+**Why read this:**
+- See the full picture of security thinking
+- Verify nothing was missed
+- Track status of every mitigation
+- Understand prioritization (Critical → Low)
+- Find references to detailed documentation
+
+### 2. [PROMPT_INJECTION_PREVENTION_2026.md](./PROMPT_INJECTION_PREVENTION_2026.md)
 
 **Comprehensive 50-page security research** with 50+ cited sources.
 
