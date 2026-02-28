@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "tezit-mcp Extension Manifest",
+  "description": "Schema for the tezit-mcp extension manifest, defining MCP tool integration for the Tezit Protocol",
+  "type": "object",
+  "required": [
+    "extension_id",
+    "extension_version",
+    "name",
+    "description",
+    "author",
+    "url"
+  ],
+  "properties": {
+    "extension_id": {
+      "type": "string",
+      "const": "tezit-mcp",
+      "description": "Unique identifier for this extension"
+    },
+    "extension_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+$",
+      "description": "Semantic version of the extension specification"
+    },
+    "name": {
+      "type": "string",
+      "const": "Model Context Protocol Integration",
+      "description": "Human-readable name of the extension"
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description of what the extension provides"
+    },
+    "author": {
+      "type": "string",
+      "description": "Name of the extension author or organization"
+    },
+    "url": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL to the extension specification"
+    },
+    "mcp_server": {
+      "type": "object",
+      "description": "Optional metadata about the MCP server that created this tez",
+      "properties": {
+        "server_name": {
+          "type": "string",
+          "description": "Name of the MCP server implementation"
+        },
+        "server_version": {
+          "type": "string",
+          "description": "Version of the MCP server"
+        },
+        "tools_used": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "check_storage",
+              "check_relay",
+              "tez_build",
+              "tez_build_confirm",
+              "tez_download",
+              "tez_share",
+              "tez_list",
+              "tez_info",
+              "tez_delete"
+            ]
+          },
+          "description": "Which MCP tools were used during the creation of this tez"
+        }
+      }
+    }
+  }
+}

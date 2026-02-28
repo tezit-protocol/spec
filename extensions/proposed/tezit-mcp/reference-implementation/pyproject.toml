@@ -1,0 +1,65 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tez-server"
+version = "0.1.0"
+description = "Tez POC — scoped, shareable, interrogatable context packages via MCP"
+requires-python = ">=3.12"
+dependencies = [
+    "fastmcp>=2.0",
+    "cryptography>=41.0",
+    "pydantic>=2.5,<3",
+    "pydantic-settings>=2.0,<3",
+    "python-dotenv>=1.0",
+    "typer>=0.9",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "pytest-asyncio>=0.24",
+    "pytest-mock>=3.14",
+    "ruff>=0.4",
+    "mypy>=1.10",
+    "httpx>=0.27",
+]
+
+[project.scripts]
+tez-server = "tez.server:main"
+tez = "tez.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tez"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers --tb=short"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+
+[[tool.mypy.overrides]]
+module = ["fastmcp.*"]
+ignore_missing_imports = true
+
+[tool.coverage.run]
+source = ["src/tez"]
+branch = true
+relative_files = true
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 0
