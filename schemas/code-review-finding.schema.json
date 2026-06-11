@@ -14,26 +14,15 @@
     },
     "severity": {
       "type": "string",
-      "description": "Severity level of the finding.",
-      "enum": ["critical", "high", "medium", "low", "info"],
+      "description": "Severity level of the finding (Profile section 4.2).",
+      "enum": ["critical", "high", "medium", "low", "informational"],
       "examples": ["high", "medium"]
     },
     "category": {
       "type": "string",
-      "description": "Category classifying the type of finding.",
-      "enum": [
-        "bug",
-        "security",
-        "performance",
-        "style",
-        "design",
-        "maintainability",
-        "documentation",
-        "testing",
-        "accessibility",
-        "other"
-      ],
-      "examples": ["security", "performance"]
+      "description": "Category classifying the type of finding. Standard categories per Profile section 4.3: security, correctness, performance, reliability, testing, maintainability, style, documentation, architecture, compatibility. Custom categories SHOULD use a namespaced format such as 'com.acme.custom-category'.",
+      "minLength": 1,
+      "examples": ["security", "correctness", "performance", "reliability", "testing", "maintainability", "style", "documentation", "architecture", "compatibility", "com.acme.custom-category"]
     },
     "observation_type": {
       "type": "string",
@@ -56,14 +45,14 @@
     },
     "status": {
       "type": "string",
-      "description": "Current status of the finding in the review workflow.",
-      "enum": ["open", "accepted", "dismissed", "fixed"],
+      "description": "Current status of the finding in the review workflow (Profile section 4.4). Transitions are tracked through the fork mechanism.",
+      "enum": ["open", "acknowledged", "fixed", "wont_fix", "disputed", "invalid"],
       "examples": ["open", "fixed"]
     },
     "location": {
       "type": "object",
-      "description": "Source code location where the finding applies.",
-      "required": ["file"],
+      "description": "Source code location where the finding applies (Profile section 4.1).",
+      "required": ["file", "line_start"],
       "properties": {
         "file": {
           "type": "string",
@@ -82,6 +71,18 @@
           "description": "Ending line number of the relevant code.",
           "minimum": 1,
           "examples": [58]
+        },
+        "column_start": {
+          "type": "integer",
+          "description": "Starting column number of the relevant code.",
+          "minimum": 1,
+          "examples": [5]
+        },
+        "column_end": {
+          "type": "integer",
+          "description": "Ending column number of the relevant code.",
+          "minimum": 1,
+          "examples": [27]
         },
         "function": {
           "type": "string",
@@ -110,6 +111,11 @@
           "description": "Code snippet demonstrating the suggested fix.",
           "examples": ["const results = await db.query('SELECT * FROM users WHERE name = $1', [searchTerm]);"]
         },
+        "diff": {
+          "type": "string",
+          "description": "Suggested change in unified diff format.",
+          "examples": ["--- a/src/api/users.ts\n+++ b/src/api/users.ts\n@@ -42,1 +42,1 @@\n-  const q = `SELECT * FROM users WHERE name = '${searchTerm}'`;\n+  const q = 'SELECT * FROM users WHERE name = $1';"]
+        },
         "rendering_hint": {
           "type": "string",
           "description": "Hint for how the suggestion should be rendered in a UI. Added in v0.2.0.",
@@ -130,9 +136,34 @@
       "description": "Explanation of why the reviewer assigned the given confidence level. Added in v0.2.0.",
       "examples": ["Pattern matches known SQL injection vulnerability with direct string concatenation of user input."]
     },
+    "citations": {
+      "type": "array",
+      "description": "Citation strings linking the finding to context items in the tez (Profile section 4.1).",
+      "items": {
+        "type": "string"
+      },
+      "examples": [["[[diff:src/api/users.ts:42]]", "[[ci-log:p3]]"]]
+    },
+    "related_findings": {
+      "type": "array",
+      "description": "Identifiers of related findings within the same review (Profile section 4.1).",
+      "items": {
+        "type": "string"
+      },
+      "examples": [["finding-002", "finding-007"]]
+    },
+    "references": {
+      "type": "array",
+      "description": "External reference URLs supporting the finding (Profile section 4.1).",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "examples": [["https://owasp.org/Top10/A03_2021-Injection/"]]
+    },
     "tags": {
       "type": "array",
-      "description": "Optional tags for additional categorization or filtering.",
+      "description": "Optional tags for additional categorization or filtering. Not defined in Profile section 4.1; retained for backward compatibility with earlier versions of this schema.",
       "items": {
         "type": "string"
       },
