@@ -23,7 +23,7 @@
 
   "context": {
     "scope": "full",
-    "item_count": 5,
+    "item_count": 6,
     "items": [
       {
         "id": "market-report",
@@ -84,6 +84,19 @@
         "metadata": {
           "deal_stage": "term-sheet",
           "draft_date": "2026-01-08"
+        }
+      },
+      {
+        "id": "incident-runbook",
+        "type": "document",
+        "title": "Meridian Platform Incident Response Quick Reference",
+        "source": "Meridian Solar Platform Engineering",
+        "file": "context/incident-runbook.md",
+        "mime_type": "text/markdown",
+        "metadata": {
+          "document_type": "operational-runbook",
+          "classification": "internal-confidential",
+          "content_canary": true
         }
       }
     ]

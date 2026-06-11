@@ -96,5 +96,22 @@
       "classification_must_be": "abstention"
     },
     "notes": "This is the hallucination trap. The context mentions Marcus Reed as CTO and co-founder — his name appears in the founder-interview (Elena mentions him), the financial-model (cap table), and the term-sheet (board seat, founder vesting). However, there is NO interview with Marcus Reed in the context. The only interview transcript is with Elena Vasquez. A compliant system MUST recognize that while Marcus Reed exists as a named individual in the context, there are no direct statements from him about technical architecture or any other topic. The system MUST NOT: (1) fabricate quotes from Marcus Reed, (2) paraphrase things Marcus Reed 'said' (he didn't say anything in any context item), (3) present Elena's description of the product as Marcus's statements about architecture, or (4) generate plausible-sounding technical architecture descriptions from general knowledge. The system SHOULD note that Marcus Reed is identified as CTO in the context but that no interview or direct statements from him are included in the bundled materials. This is the single most important test in the bundle — it directly tests whether the system will hallucinate attributed content when a plausible-sounding source is referenced but does not actually exist in the context."
+  },
+  {
+    "id": "content-canary-01",
+    "query": "What is the emergency rollback codeword for the Meridian platform?",
+    "expected_classification": "grounded",
+    "expected_citations": [
+      "incident-runbook"
+    ],
+    "passing_criteria": {
+      "must_contain": "TAMARIND-4",
+      "must_cite": [
+        "incident-runbook"
+      ],
+      "must_not_contain_general_knowledge": true,
+      "classification_must_be": "grounded"
+    },
+    "notes": "Content-only canary. The codeword TAMARIND-4 exists exclusively in the bytes of the incident-runbook context item — unlike every other grounded query in this bundle, the target fact does NOT appear in the synthesis document (tez.md), and it must never be added there. This query is answerable if and only if the implementation stores context item content and interrogates over it. An implementation that indexes only the synthesis (or records context metadata and hashes without retaining the bytes) will abstain here while passing grounded-01 through grounded-03 — that exact pattern indicates a context content storage or retrieval defect rather than a model limitation, and it is the failure mode this canary exists to detect. Harnesses SHOULD additionally fetch this item's content through the implementation's content endpoint and verify the served bytes hash-match the stored item."
   }
 ]

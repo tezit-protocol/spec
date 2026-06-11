@@ -23,7 +23,7 @@
 
   "context": {
     "scope": "full",
-    "item_count": 4,
+    "item_count": 5,
     "items": [
       {
         "id": "market-landscape",
@@ -71,6 +71,19 @@
         "metadata": {
           "memo_date": "2025-12-15",
           "audience": "board-of-directors"
+        }
+      },
+      {
+        "id": "ops-runbook",
+        "type": "document",
+        "title": "DocVision Pilot Deployment Runbook",
+        "source": "NovaTech AI Engineering",
+        "file": "context/ops-runbook.md",
+        "mime_type": "text/markdown",
+        "metadata": {
+          "document_type": "operational-runbook",
+          "classification": "internal-confidential",
+          "content_canary": true
         }
       }
     ]

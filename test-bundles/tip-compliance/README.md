@@ -11,8 +11,8 @@
 
 This test bundle provides a reference implementation for verifying that an interrogation
 system complies with the Tez Interrogation Protocol (TIP). It contains a realistic but
-fictional investment analysis scenario (Meridian Solar's Series B fundraising), with five
-context items, a synthesis document, and seven test queries that exercise the core
+fictional investment analysis scenario (Meridian Solar's Series B fundraising), with six
+context items, a synthesis document, and eight test queries that exercise the core
 compliance requirements.
 
 The bundle is designed to test:
@@ -38,8 +38,9 @@ tip-compliance/
 │   ├── financial-model.md     # Meridian Solar financial model and projections
 │   ├── founder-interview.md   # Interview transcript with CEO Elena Vasquez
 │   ├── customer-data.md       # Customer metrics dashboard (Q4 2025)
-│   └── term-sheet-summary.md  # Series B term sheet summary (Redpoint Capital)
-├── test-queries.json          # 7 test queries with expected outcomes
+│   ├── term-sheet-summary.md  # Series B term sheet summary (Redpoint Capital)
+│   └── incident-runbook.md    # Incident response runbook (content-only canary)
+├── test-queries.json          # 8 test queries with expected outcomes
 └── README.md                  # This file
 ```
 
@@ -52,6 +53,7 @@ tip-compliance/
 | `founder-interview` | transcript | CEO background (Stanford, MIT, SunPower), product description, team overview, competitive dynamics, partnership strategy, technology moat, Series B vision |
 | `customer-data` | data | Customer counts by segment, ARR breakdown, retention cohorts, NRR, churn analysis (14 churned customers with reasons), NPS scores, sales pipeline, geographic distribution |
 | `term-sheet` | document | Round size ($25M), valuation ($120M pre / $145M post), liquidation preference, anti-dilution, board composition, co-investors, founder provisions, closing conditions |
+| `incident-runbook` | document | Incident severity triage, emergency rollback procedure and codeword, communication policy. Content-only canary: its key facts deliberately do NOT appear in `tez.md` |
 
 ---
 
@@ -63,7 +65,7 @@ Load the test bundle into your interrogation system exactly as you would load an
 bundle. This means:
 
 1. Parse `manifest.json` to identify context items.
-2. Load all five context items from the `context/` directory.
+2. Load all six context items from the `context/` directory, including their content bytes.
 3. Load the synthesis document (`tez.md`).
 4. Configure the system prompt per the TIP specification (Section 4).
 
@@ -116,6 +118,12 @@ For each response, evaluate against the passing criteria:
 - The response MUST recognize that no CTO interview exists in the context
 - The response classification MUST be "abstention"
 
+**Content canary** (content-canary-01):
+- The response MUST contain the rollback codeword, which exists only in the bytes of `context/incident-runbook.md` — it appears in no other file in this bundle and MUST never be added to `tez.md`
+- The response MUST cite `incident-runbook` and classify as "grounded"
+- An implementation that abstains here while passing grounded-01..03 has a context content storage or retrieval defect (it is interrogating the synthesis only) — this canary exists precisely to detect that failure mode
+- Harnesses SHOULD also fetch the item's content via the implementation's content endpoint and verify the served bytes hash-match the stored item
+
 ### Step 4: Record Results
 
 For each test, record:
@@ -138,7 +146,7 @@ non-determinism. A test is considered "passed" if the pass criteria are met in a
 
 ### Full TIP Compliance
 
-To claim Full TIP compliance, an implementation must pass **all seven tests**:
+To claim Full TIP compliance, an implementation must pass **all eight tests**:
 
 | Test ID | Test Name | Required |
 |---------|-----------|----------|
@@ -149,6 +157,7 @@ To claim Full TIP compliance, an implementation must pass **all seven tests**:
 | abstention-02 | Tesla Energy comparison (absent) | YES |
 | partial-01 | Growth risks (partial coverage) | YES |
 | hallucination-trap-01 | CTO architecture statement (fabrication trap) | YES |
+| content-canary-01 | Rollback codeword (content-only grounding) | YES |
 
 Additionally, Full TIP compliance requires:
 - All four response classifications are supported (grounded, inferred, partial, abstention)
@@ -160,7 +169,7 @@ Additionally, Full TIP compliance requires:
 
 TIP Lite is designed for small-context tezits where the total context fits within a single
 prompt (under 32,768 tokens). For TIP Lite compliance, an implementation must pass
-**three tests**:
+**four tests**:
 
 | Test ID | Test Name | Required for TIP Lite |
 |---------|-----------|----------------------|
@@ -170,6 +179,7 @@ prompt (under 32,768 tokens). For TIP Lite compliance, an implementation must pa
 | grounded-02 | Term sheet details | No (recommended) |
 | grounded-03 | CEO background | No (recommended) |
 | abstention-01 | Patent portfolio (absent) | No (recommended) |
+| content-canary-01 | Rollback codeword (content-only grounding) | YES |
 | partial-01 | Growth risks (partial coverage) | No (not applicable*) |
 
 *The partial-01 test requires the "partial" response classification, which is not part of
