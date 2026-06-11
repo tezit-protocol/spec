@@ -44,7 +44,7 @@ Validates the YAML frontmatter of an Inline Tez -- a single Markdown file with m
 - `title`
 - `profile`
 
-Optional fields include `creator` (name, email), `context` (array of items with `label` and either `url` or `file`), `permissions`, and `tags`. Note that Inline Tez citations use `[[label]]` syntax rather than `[[item-id]]`.
+Optional fields include `creator` (name, email), `context` (array of items with `label` and either `url`, `file`, or `content_b64`), `permissions`, and `tags`. Context items may also include optional embedded-content metadata: `id`, `type`, `mime` (default `text/plain`), `size`, and `hash`. Note that Inline Tez citations use `[[label]]` syntax rather than `[[item-id]]`.
 
 ### `conversation.schema.json`
 
