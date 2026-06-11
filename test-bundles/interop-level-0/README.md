@@ -1,9 +1,9 @@
 # Level 0 Interoperability Test Bundle
 
 **Bundle ID**: `interop-level-0-2026-02`
-**Tezit Protocol Version**: 1.2.4
+**Tezit Protocol Version**: 1.3.0
 **Contributed By**: Ragu Platform
-**Last Updated**: February 5, 2026
+**Last Updated**: June 11, 2026
 
 ---
 
@@ -25,6 +25,8 @@ The bundle tests:
    types, and confidence metadata (v0.2.0)?
 4. **Cross-platform portability** -- Can a tez created on one platform be loaded on
    another without modification?
+5. **Embedded content round-trip** -- Can implementations with embedded-content
+   support decode, hash-check, and interrogate content carried inline?
 
 ---
 
@@ -34,6 +36,7 @@ The bundle tests:
 interop-level-0/
 ├── README.md                    # This file
 ├── knowledge-profile.md         # Inline tez: revenue analysis (knowledge profile)
+├── embedded-content-canary.md    # Inline tez: embedded content canary (knowledge profile)
 ├── coordination-profile.md      # Inline tez: sprint task (coordination profile)
 ├── code-review-profile.md       # Inline tez: auth token review (code_review profile)
 └── test-queries.json            # Validation queries for each profile
@@ -60,6 +63,11 @@ For each `.md` file, parse the YAML frontmatter and Markdown body. Verify that:
 Submit the queries from `test-queries.json` against the loaded tez. Each query
 specifies which inline tez file it targets and the expected behavior.
 
+Queries marked with `capability_gated: true` and `required_capability:
+"embedded_context_content"` are required only for implementations that support
+embedded content; implementations without embedded-content support must not start
+failing Level 0.
+
 ### Step 3: Validate Results
 
 Compare responses against the passing criteria in each query object.
@@ -71,6 +79,7 @@ Compare responses against the passing criteria in each query object.
 | Profile | File | Surface Schema | Key Features Tested |
 |---------|------|---------------|---------------------|
 | `knowledge` | `knowledge-profile.md` | None (standard) | Citations, factual grounding, methodology |
+| `knowledge` | `embedded-content-canary.md` | None (standard) | Optional embedded context content, hash verification, capability-gated interrogation |
 | `coordination` | `coordination-profile.md` | `coordination-surface.schema.json` | Status, assignee, recipients, due date, checklist |
 | `code_review` | `code-review-profile.md` | `code-review-surface.schema.json` | Findings, severity, observation_type, confidence (v0.2.0), observation_summary |
 
@@ -80,11 +89,14 @@ Compare responses against the passing criteria in each query object.
 
 For a platform to claim Level 0 interoperability:
 
-1. All three inline tez files MUST parse without error.
+1. All required inline tez files MUST parse without error.
 2. YAML frontmatter MUST be correctly separated from Markdown body.
 3. Profile-specific metadata MUST be accessible for display or filtering.
 4. Citations MUST be recognized (though resolution is not required at Level 0).
 5. Unknown fields in the frontmatter MUST be preserved (not silently dropped).
+6. Embedded-content queries are capability-gated and required only for
+   implementations that support embedded content; implementations without
+   embedded-content support must not start failing Level 0.
 
 ---
 
@@ -92,6 +104,7 @@ For a platform to claim Level 0 interoperability:
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.1 | 2026-06-11 | Added embedded-content canary document and capability-gated queries for implementations that support Inline Tez embedded context content |
 | 1.0 | 2026-02-05 | Initial release with knowledge, coordination, and code_review profiles |
 
 ---

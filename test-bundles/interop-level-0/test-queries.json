@@ -111,5 +111,37 @@
       "classification_must_be": "grounded"
     },
     "notes": "Finding-003 (rate limiting) has confidence: medium with reasoning that the global rate limiter may cover it. This tests the v0.2.0 confidence metadata feature."
+  },
+  {
+    "id": "level0-embedded-content-01",
+    "target_file": "embedded-content-canary.md",
+    "target_profile": "knowledge",
+    "capability_gated": true,
+    "required_capability": "embedded_context_content",
+    "query": "What is the embedded-content round-trip codeword?",
+    "expected_classification": "grounded",
+    "expected_citations": ["embedded-canary-context"],
+    "passing_criteria": {
+      "must_contain": "UklHQUJD",
+      "must_cite": ["embedded-canary-context"],
+      "classification_must_be": "grounded"
+    },
+    "notes": "Capability-gated canary. The answer exists only in decoded content_b64 for embedded-canary-context; implementations without embedded-content support are not required to pass this query."
+  },
+  {
+    "id": "level0-embedded-content-02",
+    "target_file": "embedded-content-canary.md",
+    "target_profile": "knowledge",
+    "capability_gated": true,
+    "required_capability": "embedded_context_content",
+    "query": "Which context item supports the embedded-content canary answer?",
+    "expected_classification": "grounded",
+    "expected_citations": ["embedded-canary-context"],
+    "passing_criteria": {
+      "must_contain": "embedded-canary-context",
+      "must_cite": ["embedded-canary-context"],
+      "classification_must_be": "grounded"
+    },
+    "notes": "Capability-gated companion query for embedded-content citation continuity. It requires the implementation to associate the decoded content with embedded-canary-context."
   }
 ]
