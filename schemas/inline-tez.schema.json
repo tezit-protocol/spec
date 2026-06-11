@@ -47,11 +47,22 @@
     },
     "context": {
       "type": "array",
-      "description": "List of context references. Each item must have a label and either a url or file path.",
+      "description": "List of context items. Each item must have a label and either a url, file path, or embedded content.",
       "items": {
         "type": "object",
         "required": ["label"],
         "properties": {
+          "id": {
+            "type": "string",
+            "description": "OPTIONAL stable identifier for citation continuity across export and import.",
+            "minLength": 1,
+            "examples": ["item-001"]
+          },
+          "type": {
+            "type": "string",
+            "description": "OPTIONAL context item type.",
+            "examples": ["document"]
+          },
           "url": {
             "type": "string",
             "description": "URL to an external context source.",
@@ -68,11 +79,36 @@
             "description": "Human-readable label for this context item. Used in double-bracket citations within the Markdown body, e.g. [[Q4 Budget Spreadsheet]].",
             "minLength": 1,
             "examples": ["Q4 Budget Spreadsheet", "CFO Email Thread"]
+          },
+          "mime": {
+            "type": "string",
+            "description": "OPTIONAL media type of decoded embedded content. Defaults to text/plain when omitted.",
+            "default": "text/plain",
+            "examples": ["text/plain", "application/pdf"]
+          },
+          "size": {
+            "type": "integer",
+            "description": "OPTIONAL decoded byte length of content_b64.",
+            "minimum": 0,
+            "examples": [58]
+          },
+          "hash": {
+            "type": "string",
+            "description": "OPTIONAL but RECOMMENDED when content_b64 is present. Importers MUST re-hash decoded content and MUST flag and log mismatches; mismatched content is never silently propagated as verified and is not silently dropped.",
+            "pattern": "^sha256:[A-Fa-f0-9]{64}$",
+            "examples": ["sha256:d8895b1e7c39d328c7c21384e7a01b729ac70fe8c70b1da4c1361c73f2ef2d6a"]
+          },
+          "content_b64": {
+            "type": "string",
+            "description": "OPTIONAL embedded context content using the standard base64 alphabet. content_b64 MAY appear with or without url or file. It MUST use only A-Z, a-z, 0-9, +, /, and = so embedded content cannot produce a YAML frontmatter delimiter line.",
+            "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
+            "examples": ["VGhlIHJvbGxiYWNrIHBsYW4gaXMgc3RhYmxlLgo="]
           }
         },
         "anyOf": [
           { "required": ["url"] },
-          { "required": ["file"] }
+          { "required": ["file"] },
+          { "required": ["content_b64"] }
         ],
         "additionalProperties": false
       }
