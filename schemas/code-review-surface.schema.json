@@ -2,19 +2,58 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://tezit.com/spec/v1.2/code-review-surface.schema.json",
   "title": "Tez Code Review Surface",
-  "description": "Schema for the surface object of a code review profile tez, providing a high-level summary of the review including findings counts, observation breakdown, and overall verdict.",
+  "description": "Schema for the surface object of a code review profile tez, per Code Review Profile v0.2.0 section 3.1. The surface summarizes the review: type, verdict, severity and observation counts, repository coordinates, and the parties involved.",
   "type": "object",
-  "required": ["review_id", "findings_count"],
+  "required": ["review_type", "verdict", "severity_summary", "finding_count", "repository", "reviewer", "author"],
   "properties": {
-    "review_id": {
+    "review_type": {
       "type": "string",
-      "description": "Unique identifier for this code review.",
-      "minLength": 1,
-      "examples": ["review-pr-142-2026-02-01", "review-abc123"]
+      "description": "Type of code review (Profile section 2).",
+      "enum": ["pull_request", "commit_range", "file_set", "security_audit"],
+      "examples": ["pull_request", "security_audit"]
+    },
+    "verdict": {
+      "type": "string",
+      "description": "Overall review verdict (Profile section 3.2). A review with any critical finding SHOULD NOT have a verdict of 'approved'.",
+      "enum": ["approved", "changes_requested", "rejected", "informational"],
+      "examples": ["changes_requested"]
+    },
+    "severity_summary": {
+      "type": "object",
+      "description": "Finding counts by severity level (Profile section 3.1).",
+      "required": ["critical", "high", "medium", "low"],
+      "properties": {
+        "critical": { "type": "integer", "minimum": 0 },
+        "high": { "type": "integer", "minimum": 0 },
+        "medium": { "type": "integer", "minimum": 0 },
+        "low": { "type": "integer", "minimum": 0 },
+        "informational": { "type": "integer", "minimum": 0, "default": 0 }
+      },
+      "additionalProperties": false,
+      "examples": [{ "critical": 0, "high": 2, "medium": 3, "low": 1, "informational": 2 }]
+    },
+    "observation_summary": {
+      "type": "object",
+      "description": "Finding counts by observation type (Profile sections 3.1 and 4.5). Added in v0.2.0. When omitted, 'issue' defaults to finding_count and the other types default to 0.",
+      "properties": {
+        "issue": { "type": "integer", "minimum": 0 },
+        "praise": { "type": "integer", "minimum": 0 },
+        "question": { "type": "integer", "minimum": 0 },
+        "note": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false,
+      "examples": [{ "issue": 6, "praise": 1, "question": 1, "note": 0 }]
+    },
+    "finding_count": {
+      "type": "integer",
+      "description": "Total number of findings in the review.",
+      "minimum": 0,
+      "examples": [8]
     },
     "repository": {
       "type": "string",
       "description": "Repository identifier or URL being reviewed.",
+      "minLength": 1,
       "examples": ["acme/backend-api", "https://github.com/acme/backend-api"]
     },
     "branch": {
@@ -22,149 +61,95 @@
       "description": "Branch name under review.",
       "examples": ["feature/user-auth", "fix/sql-injection"]
     },
-    "commit_sha": {
+    "base_branch": {
       "type": "string",
-      "description": "Git commit SHA of the code being reviewed.",
-      "examples": ["a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"]
+      "description": "Base branch the change targets.",
+      "examples": ["main"]
+    },
+    "commit_range": {
+      "type": "string",
+      "description": "Commit range under review.",
+      "examples": ["a1b2c3d..e4f5a6b"]
     },
     "pull_request": {
-      "type": "object",
-      "description": "Pull request associated with this review.",
-      "properties": {
-        "number": {
-          "type": "integer",
-          "description": "Pull request number.",
-          "minimum": 1,
-          "examples": [142]
-        },
-        "url": {
-          "type": "string",
-          "description": "URL of the pull request.",
-          "format": "uri",
-          "examples": ["https://github.com/acme/backend-api/pull/142"]
-        }
-      },
-      "additionalProperties": false
+      "type": "string",
+      "description": "Pull request URL or identifier.",
+      "examples": ["https://github.com/acme/backend-api/pull/142", "142"]
+    },
+    "languages": {
+      "type": "array",
+      "description": "Programming languages covered by the review.",
+      "items": { "type": "string" },
+      "examples": [["typescript", "python"]]
+    },
+    "files_reviewed": {
+      "type": "integer",
+      "description": "Number of files reviewed.",
+      "minimum": 0,
+      "examples": [14]
+    },
+    "lines_changed": {
+      "type": "integer",
+      "description": "Number of lines changed in the reviewed change set.",
+      "minimum": 0,
+      "examples": [486]
     },
     "reviewer": {
       "type": "object",
-      "description": "Information about the entity that performed the review.",
+      "description": "The party who performed the review (Profile section 3.1).",
+      "required": ["name", "role"],
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the reviewer.",
-          "examples": ["reviewer-jane", "ai-claude-opus"]
-        },
         "name": {
           "type": "string",
           "description": "Human-readable name of the reviewer.",
+          "minLength": 1,
           "examples": ["Jane Smith", "Claude Code Review"]
+        },
+        "email": { "type": "string", "format": "email" },
+        "role": {
+          "type": "string",
+          "description": "Role of the reviewer in this review.",
+          "enum": ["reviewer", "author", "auditor"]
         },
         "type": {
           "type": "string",
-          "description": "Whether the reviewer is a human or AI.",
-          "enum": ["human", "ai"],
-          "examples": ["human", "ai"]
+          "description": "Whether the reviewer is a human, an AI, or a hybrid.",
+          "enum": ["human", "ai", "hybrid"]
         }
       },
       "additionalProperties": false
     },
-    "findings_count": {
+    "author": {
       "type": "object",
-      "description": "Summary counts of findings in the review.",
-      "required": ["total"],
+      "description": "The author of the code under review (Profile section 3.1).",
+      "required": ["name", "role"],
       "properties": {
-        "total": {
-          "type": "integer",
-          "description": "Total number of findings.",
-          "minimum": 0,
-          "examples": [12]
+        "name": {
+          "type": "string",
+          "description": "Human-readable name of the author.",
+          "minLength": 1,
+          "examples": ["Sam Patel"]
         },
-        "by_severity": {
-          "type": "object",
-          "description": "Findings count broken down by severity level.",
-          "properties": {
-            "critical": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "high": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "medium": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "low": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "info": {
-              "type": "integer",
-              "minimum": 0
-            }
-          },
-          "additionalProperties": false
+        "email": { "type": "string", "format": "email" },
+        "role": {
+          "type": "string",
+          "description": "Role of the author in this review.",
+          "minLength": 1,
+          "examples": ["author"]
         },
-        "by_status": {
-          "type": "object",
-          "description": "Findings count broken down by status.",
-          "properties": {
-            "open": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "accepted": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "dismissed": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "fixed": {
-              "type": "integer",
-              "minimum": 0
-            }
-          },
-          "additionalProperties": false
+        "type": {
+          "type": "string",
+          "description": "Whether the author is a human, an AI, or a hybrid.",
+          "enum": ["human", "ai", "hybrid"]
         }
       },
       "additionalProperties": false
     },
-    "observation_summary": {
-      "type": "object",
-      "description": "Breakdown of findings by observation type. Added in v0.2.0 to distinguish issues from praise, questions, and notes.",
-      "properties": {
-        "issues": {
-          "type": "integer",
-          "description": "Number of findings classified as issues.",
-          "minimum": 0
-        },
-        "praises": {
-          "type": "integer",
-          "description": "Number of findings classified as praise.",
-          "minimum": 0
-        },
-        "questions": {
-          "type": "integer",
-          "description": "Number of findings classified as questions.",
-          "minimum": 0
-        },
-        "notes": {
-          "type": "integer",
-          "description": "Number of findings classified as notes.",
-          "minimum": 0
-        }
-      },
-      "additionalProperties": false
-    },
-    "overall_verdict": {
-      "type": "string",
-      "description": "The reviewer's overall verdict on the code under review.",
-      "enum": ["approve", "request_changes", "comment"],
-      "examples": ["approve", "request_changes"]
+    "review_tools": {
+      "type": "array",
+      "description": "Tools used to produce or assist the review.",
+      "items": { "type": "string" },
+      "examples": [["eslint", "semgrep", "claude-code"]]
     }
   },
   "additionalProperties": false
