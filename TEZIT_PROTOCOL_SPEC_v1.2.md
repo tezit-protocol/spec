@@ -1,8 +1,8 @@
 # Tezit Protocol Specification
 
-**Version**: 1.2.4
+**Version**: 1.3.0
 **Status**: Draft
-**Last Updated**: February 5, 2026
+**Last Updated**: June 11, 2026
 **Website**: [tezit.com/spec](https://tezit.com/spec)
 
 ---
@@ -112,6 +112,12 @@ The CFO flagged this concern in October [[CFO Email Thread:p2]]...
 | `context[].url` | string | No | URL to external context source |
 | `context[].file` | string | No | Relative path to local file |
 | `context[].label` | string | Yes (per item) | Human-readable label for the context item |
+| `context[].id` | string | No | Stable identifier for citation continuity |
+| `context[].type` | string | No | Context item type |
+| `context[].mime` | string | No | Media type of decoded embedded content (default: `text/plain`) |
+| `context[].size` | integer | No | Decoded byte length of embedded content |
+| `context[].hash` | string | No | SHA-256 hash of decoded embedded content (`sha256:<hex>`); recommended with `content_b64` |
+| `context[].content_b64` | string | No | Embedded context content using the standard base64 alphabet |
 | `permissions.interrogate` | boolean | No | Whether recipients can interrogate (default: true) |
 | `permissions.fork` | boolean | No | Whether recipients can fork (default: true) |
 | `tags` | array | No | Classification tags |
@@ -122,6 +128,27 @@ The CFO flagged this concern in October [[CFO Email Thread:p2]]...
 - `[[Q4 Budget Spreadsheet]]` -- reference by label
 - `[[Q4 Budget Spreadsheet:Sheet2]]` -- with location specifier
 - `[[CFO Email Thread:p2]]` -- page reference by label
+
+**Embedded context content:** Inline Tez context entries MAY embed content directly in the frontmatter with optional `id`, `type`, `mime`, `size`, `hash`, and `content_b64` fields. These fields are additive: an entry remains valid as a pure reference with `label` plus `url` or `file`, and `content_b64` MAY appear with or without a reference.
+
+```yaml
+context:
+  - label: "Deploy Runbook"
+    id: "item-001"
+    type: "document"
+    mime: "text/plain"
+    size: 58
+    hash: "sha256:d8895b1e7c39d328c7c21384e7a01b729ac70fe8c70b1da4c1361c73f2ef2d6a"
+    content_b64: "VGhlIHJvbGxiYWNrIHBsYW4gaXMgc3RhYmxlLgo="
+```
+
+`content_b64` MUST use the standard base64 alphabet (`A-Z`, `a-z`, `0-9`, `+`, `/`, and `=`). The standard alphabet cannot produce a line consisting of `---`, so embedded content cannot terminate the YAML frontmatter delimiter.
+
+Importers MUST decode embedded content and re-hash the decoded bytes. When a declared `hash` is present and does not match the decoded content, importers MUST import the item with the mismatch flagged in item metadata and MUST log the mismatch. Mismatched content MUST NOT be silently propagated as verified, and MUST NOT be silently dropped. Metadata keys are implementation-specific; for example, an importer might record `imported_hash_mismatch: true` and `declared_content_hash`.
+
+Exporters SHOULD enforce per-item and per-document embedding budgets and downgrade oversized items to reference-only entries rather than failing the export. Non-normative reference values from production use are 64 KiB per item and 128 KiB per document before base64 encoding. Importers SHOULD cap total Inline Tez document size; a non-normative reference cap is 256 KB.
+
+Consumers that do not understand the embedded-content fields parse the entry exactly as today by using `label` plus any `url` or `file` reference and ignoring unknown fields. This preserves graceful degradation for Level 0 consumers that have not implemented embedded-content support.
 
 **Platform support:** Tezit.com and compatible tools can import Inline Tezits by:
 1. Parsing YAML frontmatter for metadata
@@ -2028,6 +2055,7 @@ A complete example bundle is available at:
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.3.0 | 2026-06-11 | Added optional embedded context content fields for Inline Tez Level 0 context entries (`id`, `type`, `mime`, `size`, `hash`, `content_b64`). Defined delimiter safety, integrity-on-import behavior, embedding budget guidance with reference fallback, and graceful degradation for consumers that ignore the new fields. |
 | 1.2.4 | 2026-02-05 | Updated companion spec versions (Code Review Profile v0.2.0 Proposed, Coordination Profile v1.1-draft, TIP Enterprise Addendum v1.1-draft). Added 4 JSON Schema files for companion specifications. Updated Ragu implementer status with 44-test conformance suite, reference implementations, and schema deliverables. Added v1.3 Proposed Features section with three accepted proposals: bundle signature verification, interrogation session transfer, and context item versioning. |
 | 1.2.3 | 2026-02-05 | Added companion spec references for Coordination Profile, Code Review Profile, and TIP Enterprise Addendum. Added `review` and `coordination` synthesis types. Added `synthesis.supplementary` field. Updated Ragu Platform implementer status. |
 | 1.2.2 | 2026-02-05 | Extended citation syntax with element-type references (tables, figures, paragraphs). Living document failure modes (source unavailable, degraded context, freshness warnings). Extension registry process with PR-based contribution, vendor namespaces, and lifecycle stages. Code Review profile (proposed, contributed by Ragu Platform). Ragu Platform added as second implementer. |
