@@ -235,7 +235,15 @@
         },
         "verified": {
           "type": "boolean",
-          "description": "Whether this citation has been verified by post-processing (item exists, location exists, content supports claim)."
+          "description": "Whether this citation has been verified by post-processing. When true, this implies exists_verified and integrity_verified are both true, even when those optional fields are omitted for backward compatibility."
+        },
+        "exists_verified": {
+          "type": "boolean",
+          "description": "Whether the citation's item_id resolves to an actual context item and the location, if present, resolves within that item. Optional for backward compatibility. A citation with verified: true must also satisfy this condition."
+        },
+        "integrity_verified": {
+          "type": "boolean",
+          "description": "Whether the cited item's served or stored content bytes hash-match the context item's declared content hash. Optional for backward compatibility. A citation with verified: true must also satisfy this condition."
         }
       },
       "additionalProperties": false
