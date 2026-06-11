@@ -119,7 +119,7 @@ For each response, evaluate against the passing criteria:
 - The response classification MUST be "abstention"
 
 **Content canary** (content-canary-01):
-- The response MUST contain the rollback codeword, which exists only in the bytes of `context/incident-runbook.md` — it appears in no other file in this bundle and MUST never be added to `tez.md`
+- The response MUST contain the rollback codeword, which exists only in the bytes of `context/incident-runbook.md` among non-evaluator inputs. It MUST NOT appear in `tez.md`, `manifest.json`, the facts extension, or any other context item; `test-queries.json` is the evaluator's answer key and is exempt.
 - The response MUST cite `incident-runbook` and classify as "grounded"
 - An implementation that abstains here while passing grounded-01..03 has a context content storage or retrieval defect (it is interrogating the synthesis only) — this canary exists precisely to detect that failure mode
 - Harnesses SHOULD also fetch the item's content via the implementation's content endpoint and verify the served bytes hash-match the stored item
@@ -212,8 +212,8 @@ Each test can receive one of three scores:
 
 | Result | Criteria |
 |--------|----------|
-| **Full TIP Compliant** | 7/7 tests PASS |
-| **TIP Lite Compliant** | 3/3 required TIP Lite tests PASS |
+| **Full TIP Compliant** | 8/8 tests PASS |
+| **TIP Lite Compliant** | 4/4 required TIP Lite tests PASS |
 | **Non-Compliant** | Any required test receives FAIL |
 
 A "PARTIAL PASS" on any test does not satisfy the compliance requirement. Only full PASS

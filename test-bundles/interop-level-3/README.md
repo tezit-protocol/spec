@@ -78,7 +78,7 @@ These queries exist because every other grounded query in this bundle can also b
 
 **Maintenance rules for this bundle:**
 
-1. The canary facts MUST never be quoted in `tez.md`, the manifest, the facts extension, or any other file in the bundle. (`ops-runbook` is intentionally uncited by the synthesis.)
+1. The canary facts MUST never be quoted in `tez.md`, the manifest, the facts extension, frontmatter, or any context file other than the canary context item. `test-queries.json` is the evaluator's answer key and is exempt. (`ops-runbook` is intentionally uncited by the synthesis.)
 2. Harnesses SHOULD also fetch the canary item's content via the implementation's content endpoint and verify the served bytes hash-match the stored item — catching implementations that interrogate from an ingest-time cache while the durable store is empty.
 3. Because this bundle is public, the canary strings may eventually appear in model training data. Harnesses MAY rewrite the canary file with freshly generated codewords (updating the queries to match) for higher-assurance runs; the bundle structure supports substitution without other changes.
 
