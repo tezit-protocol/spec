@@ -16,22 +16,20 @@ permissions:
   fork: true
   reshare: false
 surface:
-  review_id: "review-pr-287-2026-02-04"
   review_type: pull_request
-  overall_verdict: request_changes
-  findings_count:
-    total: 5
-    by_severity:
-      critical: 1
-      high: 1
-      medium: 2
-      low: 0
-      info: 1
+  verdict: changes_requested
+  severity_summary:
+    critical: 1
+    high: 1
+    medium: 2
+    low: 0
+    informational: 1
+  finding_count: 5
   observation_summary:
-    issues: 4
-    praises: 1
-    questions: 0
-    notes: 0
+    issue: 4
+    praise: 1
+    question: 0
+    note: 0
   repository: "github.com/ragu-platform/internal-api"
   branch: "feature/token-refresh"
   base_branch: "main"

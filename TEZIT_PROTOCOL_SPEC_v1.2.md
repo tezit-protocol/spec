@@ -379,19 +379,21 @@ The Tez protocol supports multiple **profiles** -- consumption patterns optimize
 **Manifest indicator**:
 ```json
 {
-  "profile": "review",
+  "profile": "code_review",
   "surface": {
-    "review_type": "code_review",
-    "status": "changes_requested",
-    "findings_count": 3,
+    "review_type": "pull_request",
+    "verdict": "changes_requested",
+    "finding_count": 3,
     "severity_summary": {
       "critical": 1,
-      "warning": 2,
-      "info": 0
+      "high": 0,
+      "medium": 2,
+      "low": 0,
+      "informational": 0
     },
     "target": {
       "repository": "acme/auth-service",
-      "pull_request": 142,
+      "pull_request": "142",
       "base_ref": "main",
       "head_ref": "feature/oauth-migration"
     }
@@ -403,10 +405,10 @@ The Tez protocol supports multiple **profiles** -- consumption patterns optimize
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `surface.review_type` | string | Yes | `code_review`, `design_review`, `security_review`, `architecture_review` |
-| `surface.status` | string | Yes | `approved`, `changes_requested`, `rejected`, `pending` |
-| `surface.findings_count` | integer | No | Total number of review findings |
-| `surface.severity_summary` | object | No | Count of findings by severity (`critical`, `warning`, `info`) |
+| `surface.review_type` | string | Yes | `pull_request`, `commit_range`, `file_set`, `security_audit` |
+| `surface.verdict` | string | Yes | `approved`, `changes_requested`, `rejected`, `informational` |
+| `surface.finding_count` | integer | Yes | Total number of review findings |
+| `surface.severity_summary` | object | Yes | Count of findings by severity (`critical`, `high`, `medium`, `low`, `informational`) |
 | `surface.target` | object | No | What is being reviewed (repository, PR, document, etc.) |
 
 #### 1.8.4 Profile Interoperability
