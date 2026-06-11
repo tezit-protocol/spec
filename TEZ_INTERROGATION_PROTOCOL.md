@@ -1,8 +1,8 @@
 # Tez Interrogation Protocol (TIP)
 
-**Version**: 1.0.3
+**Version**: 1.0.4
 **Status**: Draft
-**Last Updated**: February 5, 2026
+**Last Updated**: June 11, 2026
 **Companion To**: Tezit Protocol Specification v1.2
 **Website**: [tezit.com/spec/tip](https://tezit.com/spec/tip)
 
@@ -689,7 +689,11 @@ All citations in an interrogation response MUST be verifiable. This means:
 2. The location specifier (page, line, section, timestamp) MUST reference a location that exists within the cited context item.
 3. The content at the cited location MUST support the claim being made.
 
-Implementations MUST perform automated verification of requirements (1) and (2). Requirement (3) SHOULD be verified but MAY require human judgment in edge cases.
+Requirements (1) and (2) are the existence verification checks represented by `exists_verified` in response metadata. Implementations MUST perform automated verification of these requirements. Requirement (3) SHOULD be verified but MAY require human judgment in edge cases.
+
+A citation MUST NOT be marked `verified` unless the cited item's content is retrievable and the content bytes used for verification hash-match the context item's declared content hash. Citation verification MUST be anchored to bytes actually served or stored for the cited item, not to metadata assertions alone.
+
+The verification ladder is: existence verification (`exists_verified`), integrity verification (`integrity_verified`), then semantic verification. The semantic verification levels proposed in issue #5 sit above this floor; this specification adds the existence and integrity preconditions without implementing the issue #5 level framework.
 
 ### 5.6 Citation Rendering
 
@@ -797,6 +801,8 @@ Implementations SHOULD include machine-readable classification metadata in API r
         "item_id": "budget",
         "location": "p4",
         "claim": "infrastructure allocation is $500,000",
+        "exists_verified": true,
+        "integrity_verified": true,
         "verified": true
       }
     ],
@@ -806,6 +812,31 @@ Implementations SHOULD include machine-readable classification metadata in API r
   }
 }
 ```
+
+Citation metadata MAY include the following verification fields:
+
+- `exists_verified` (boolean, OPTIONAL): `true` when the `item_id` resolves to an actual context item and the `location`, if present, resolves within that item.
+- `integrity_verified` (boolean, OPTIONAL): `true` when the cited item's served or stored content bytes hash-match the context item's declared content hash.
+- `verified` (boolean): retained for backward compatibility. If emitted as `true`, it MUST imply both `exists_verified: true` and `integrity_verified: true`.
+
+Example citation metadata:
+
+```json
+{
+  "citations": [
+    {
+      "item_id": "budget",
+      "location": "p4",
+      "claim": "infrastructure allocation is $500,000",
+      "exists_verified": true,
+      "integrity_verified": true,
+      "verified": true
+    }
+  ]
+}
+```
+
+**Non-normative strict mode note**: Implementations SHOULD support a strict mode in which citations to items with missing content or mismatching content hashes are downgraded to unverified and surfaced to the recipient. Strict mode is RECOMMENDED for production deployments. In non-strict operation, integrity failures SHOULD still be logged or otherwise made available for diagnostics.
 
 For partial responses:
 
@@ -2873,6 +2904,7 @@ Response (200 OK):
 | 1.0.1 | 2026-02-05 | Added TIP Lite conformance level for small-context tezits (Section 1.5.2). Connected streaming responses to HTTP API spec (Section 15.7). Added reference test bundle guidance (Section 11.11). Added audio transcription quality considerations (Section 10.2.5). |
 | 1.0.2 | 2026-02-05 | Ragu Platform feedback integration. Expanded streaming citations with SSE event types (Section 15.7). Clarified TIP Lite threshold to support enterprise context windows (Section 1.5.2). Added retrieval strategy hints for queries (Section 10.1.7). Added retrieval transparency metadata in citations (Section 6.6). Added context freshness metadata for living sources (Section 6.7). Added element-level citation syntax for tables, figures, and paragraphs (Section 5.1.8). |
 | 1.0.3 | 2026-02-05 | Added TIP Enterprise Addendum reference (Section 1.6). Cross-referenced streaming, retrieval strategy, and retrieval transparency sections with Enterprise Addendum companion document. |
+| 1.0.4 | 2026-06-11 | Added citation existence and integrity verification preconditions (Section 5.5). Added optional `exists_verified` and `integrity_verified` citation metadata fields while retaining `verified` for backward compatibility (Section 6.5). |
 
 ---
 
