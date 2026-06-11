@@ -27,4 +27,5 @@ Ragu previously contributed the Code Review and Coordination companion profiles,
 | [spec#10](https://github.com/tezit-protocol/spec/issues/10) | Level 0 inline tez cannot round-trip context evidence — optional embedded content proposed |
 | [spec#11](https://github.com/tezit-protocol/spec/issues/11) | TIP citation `verified` needs existence/integrity preconditions (complements [#5](https://github.com/tezit-protocol/spec/issues/5)) |
 | [mcp-server#24](https://github.com/tezit-protocol/mcp-server/issues/24) | Reference MCP tool surface: transfer plane vs knowledge core loop, plus agent trust-model lessons |
-| spec PR | `schemas/` alignment: code-review schemas vs Code Review Profile v0.2.0 contradictions |
+| [spec#13](https://github.com/tezit-protocol/spec/pull/13) | `schemas/` alignment: code-review schemas vs Code Review Profile v0.2.0 contradictions (PR) |
+| [spec#14](https://github.com/tezit-protocol/spec/pull/14) | Content-only canary queries for both interrogation test bundles (PR implementing #9) |
