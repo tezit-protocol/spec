@@ -118,6 +118,34 @@
         "synthesis_required": true
       },
       "rationale": "Answering this requires combining data from multiple context items: the $8.2M runway and $1.8M market entry cost from financial-projections:section-5, the $340K distillation cost from technical-assessment:section-5, and the break-even timeline from financial-projections:table-3. The correct answer is that the runway is NOT sufficient without additional funding -- effective runway drops to 11 months (through December 2026) but break-even is projected for Q3 2027, creating a 6-month gap that requires Series B fundraising by Q2 2026."
+    },
+    {
+      "id": "content-canary-01",
+      "category": "content-canary",
+      "query": "What is the rollback codeword for the DocVision pilot deployment?",
+      "expected_behavior": {
+        "type": "answer",
+        "must_cite": ["ops-runbook"],
+        "must_contain": ["CASSOWARY-9"],
+        "must_contain_mode": "any",
+        "may_contain": ["rotated after every use", "two-person"],
+        "must_not_contain": []
+      },
+      "rationale": "Content-only canary. The codeword CASSOWARY-9 exists exclusively in the bytes of context/ops-runbook.md -- it does not appear in tez.md, manifest.json, or extensions/facts.json, and it must never be added to them. A system can only answer this query if it actually stores context item content and interrogates over it. An implementation that indexes only the synthesis document (or records context metadata and hashes without retaining the bytes) will abstain here while passing every other grounded query -- exactly the failure mode this canary exists to detect. If this query abstains while grounded-01 through grounded-03 pass, the implementation has a context content storage or retrieval defect, not a model problem."
+    },
+    {
+      "id": "content-canary-02",
+      "category": "content-canary",
+      "query": "How long must a DocVision pilot deployment bake before it is eligible for fleet-wide rollout?",
+      "expected_behavior": {
+        "type": "answer",
+        "must_cite": ["ops-runbook"],
+        "must_contain": ["72 hours", "72-hour", "72 hour"],
+        "must_contain_mode": "any",
+        "may_contain": ["error budget", "full traffic"],
+        "must_not_contain": []
+      },
+      "rationale": "Second content-only canary with a different shape (a duration rather than a token), guarding against harnesses or implementations that special-case a single codeword string. The 72-hour bake period appears only in context/ops-runbook.md. Same detection logic as content-canary-01."
     }
   ]
 }

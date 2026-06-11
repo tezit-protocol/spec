@@ -4,7 +4,7 @@
 
 This is a **Level 3 (Platform Tez)** interop test bundle for the Tezit Protocol v1.2. It exercises the full feature set of the protocol including synthesis documents, multi-item context, permissions, extensions, and cross-reference citations.
 
-The scenario is a **market entry analysis** for NovaTech AI, a fictional Series A startup evaluating entry into the enterprise document processing market. The bundle contains a synthesis document that references four context items via Tezit citation syntax.
+The scenario is a **market entry analysis** for NovaTech AI, a fictional Series A startup evaluating entry into the enterprise document processing market. The bundle contains a synthesis document that references four context items via Tezit citation syntax, plus a fifth context item (an operational runbook) that is deliberately never cited by the synthesis — it carries the content-only canary facts (see below).
 
 ## Bundle Structure
 
@@ -17,10 +17,11 @@ interop-level-3/
 │   ├── market-landscape.md            # Market research report
 │   ├── technical-assessment.md        # Technical capability assessment
 │   ├── financial-projections.md       # 3-year financial model
-│   └── founder-memo.md               # CEO strategic memo
+│   ├── founder-memo.md               # CEO strategic memo
+│   └── ops-runbook.md                # Deployment runbook (content-only canary)
 ├── extensions/
 │   └── facts.json                     # tezit-facts extension data
-└── test-queries.json                  # 8 test queries with expected behaviors
+└── test-queries.json                  # 10 test queries with expected behaviors
 ```
 
 ## Tezit Level 3 Features Exercised
@@ -29,7 +30,7 @@ interop-level-3/
 |---------|--------|---------|
 | Manifest schema | Yes | Full `$schema` reference to v1.2 |
 | Synthesis document | Yes | `tez.md` with structured analysis |
-| Context items | Yes | 4 items (3 documents, 1 data) |
+| Context items | Yes | 5 items (4 documents, 1 data) |
 | Citation syntax | Yes | `[[item-id:location]]` references throughout synthesis |
 | Permissions block | Yes | CC-BY-NC-4.0 license, interrogate/fork/reshare enabled |
 | Extensions | Yes | `tezit-facts` extension with 5 extracted facts |
@@ -37,7 +38,7 @@ interop-level-3/
 
 ## Test Queries
 
-The `test-queries.json` file contains 8 test queries across four categories:
+The `test-queries.json` file contains 10 test queries across five categories:
 
 ### Grounded (3 queries)
 Queries that should be answerable with proper citations to specific context items.
@@ -67,12 +68,26 @@ Queries requiring synthesis across multiple context items.
 
 - **cross-reference-01**: Runway sufficiency for market entry (requires combining financial projections with technical assessment costs)
 
+### Content Canary (2 queries)
+Queries answerable **only** from the bytes of a context item — the target facts appear nowhere in `tez.md`, `manifest.json`, or `extensions/facts.json`.
+
+- **content-canary-01**: Rollback codeword (exists only in `context/ops-runbook.md`; expected value in `test-queries.json`)
+- **content-canary-02**: Pilot bake period (exists only in `context/ops-runbook.md`; expected value in `test-queries.json`)
+
+These queries exist because every other grounded query in this bundle can also be answered from the synthesis document — the figures checked by `grounded-01..03` appear in `tez.md` itself. An implementation that never stores context item content (indexing only the synthesis) therefore passes the rest of this suite while violating the protocol's core promise. The canaries detect that failure mode: they ground if and only if context content is stored and interrogable.
+
+**Maintenance rules for this bundle:**
+
+1. The canary facts MUST never be quoted in `tez.md`, the manifest, the facts extension, or any other file in the bundle. (`ops-runbook` is intentionally uncited by the synthesis.)
+2. Harnesses SHOULD also fetch the canary item's content via the implementation's content endpoint and verify the served bytes hash-match the stored item — catching implementations that interrogate from an ingest-time cache while the durable store is empty.
+3. Because this bundle is public, the canary strings may eventually appear in model training data. Harnesses MAY rewrite the canary file with freshly generated codewords (updating the queries to match) for higher-assurance runs; the bundle structure supports substitution without other changes.
+
 ## Validation
 
 A conformant Level 3 Tezit consumer should:
 
 1. Parse `manifest.json` and validate against the v1.2 schema
-2. Load and index all 4 context items
+2. Load and index all 5 context items, including their content bytes
 3. Parse citation references in `tez.md` and resolve them to context items
 4. Respect the `permissions` block (no commercial use)
 5. Load the `tezit-facts` extension and make extracted facts available
@@ -80,6 +95,7 @@ A conformant Level 3 Tezit consumer should:
 7. Abstain from answering queries outside the context scope
 8. Detect hallucination traps (no CTO exists in context)
 9. Synthesize across context items for cross-reference queries
+10. Ground the content-canary queries from stored context bytes (see above)
 
 ## Internal Consistency
 
