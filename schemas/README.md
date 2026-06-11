@@ -82,7 +82,7 @@ Validates a response returned by a TIP-compliant interrogation endpoint. Fields:
 - `response.text` -- full response with inline citations
 - `response.classification` -- `grounded`, `inferred`, `partial`, or `abstention`
 - `response.confidence` -- overall confidence: `high`, `medium`, or `low`
-- `response.citations` -- array of verified citation objects (item_id, location, text_excerpt, verified)
+- `response.citations` -- array of citation objects (item_id, location, text_excerpt, verified, and optional exists_verified/integrity_verified)
 - `response.gaps` -- information gaps (for partial/abstention responses)
 - `response.inferences` -- explicit inferences with basis and reasoning
 - `response.claims` -- optional per-claim confidence breakdown
