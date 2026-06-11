@@ -9,9 +9,9 @@ context:
     id: "embedded-canary-context"
     type: "document"
     mime: "text/plain"
-    size: 61
-    hash: "sha256:92cdfc5daf4f07a6c135e73b22d0beabc111bfc4a1802be5f25c66c88ffb1dda"
-    content_b64: "UklHQUJDClRoZSBlbWJlZGRlZC1jb250ZW50IHJvdW5kLXRyaXAgY29kZXdvcmQgaXMgVWtsSFFVSkQuCg=="
+    size: 55
+    hash: "sha256:c66a23c4d0fb1c37051dc09f4395297a07b481813a55a51a6c414358cbc56f9f"
+    content_b64: "VGhlIGVtYmVkZGVkLWNvbnRlbnQgcm91bmQtdHJpcCBjb2Rld29yZCBpcyBWRVJEQU5ULTYuCg=="
 permissions:
   interrogate: true
   fork: true

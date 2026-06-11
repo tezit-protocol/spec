@@ -9,14 +9,15 @@
     ".lane/report.json",
     ".lane/DONE"
   ],
-  "versioning_decision": "Bumped the specification to 1.3.0. Section 8.1 defines protocol versions as major.minor and says minor versions are for backward-compatible additions; embedded context content is additive and all new fields are optional, so the current 1.2.4 draft advances to the next minor protocol version.",
+  "versioning_decision": "Bumped the v1.2 specification document from 1.2.4 to 1.2.5. Although Section 8.1 says minor versions are for backward-compatible additions, this repository versions in-file v1.2 revisions with a third component in the 1.2.1 through 1.2.4 history table and starts a new file for minor protocol lines. Section 14 also keeps v1.3 as a future proposal bucket. Embedded context content is backward-compatible and all new fields are optional, so it is recorded as 1.2.5 and noted as a candidate for consolidation into a future v1.3 file.",
   "canary": {
-    "codeword_location": "test-bundles/interop-level-0/embedded-content-canary.md context item embedded-canary-context content_b64 payload; answer key in test-bundles/interop-level-0/test-queries.json",
+    "codeword_location": "Plain grep for the codeword across test-bundles/interop-level-0/ hits only test-queries.json; decoding embedded-content-canary.md context item embedded-canary-context content_b64 and grepping the decoded bytes hits the canary sentence.",
     "hash_verified": true
   },
   "findings": [
     "schemas/inline-tez.schema.json and test-bundles/interop-level-0/test-queries.json parse with jq.",
-    "The embedded canary payload decodes to 61 bytes and matches the declared SHA-256 hash."
+    "The embedded canary payload decodes to 55 bytes and matches the declared SHA-256 hash.",
+    "Plain grep containment is intentionally limited to test-queries.json; the carrying document reveals the canary fact only after base64 decoding."
   ],
   "deliberately_not_done": [
     "Did not touch TEZ_INTERROGATION_PROTOCOL.md, schemas/tip-*.json, test-bundles/interop-level-3/, or test-bundles/tip-compliance/.",

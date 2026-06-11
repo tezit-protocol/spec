@@ -1,6 +1,6 @@
 # Tezit Protocol Specification
 
-**Version**: 1.3.0
+**Version**: 1.2.5
 **Status**: Draft
 **Last Updated**: June 11, 2026
 **Website**: [tezit.com/spec](https://tezit.com/spec)
@@ -2055,7 +2055,7 @@ A complete example bundle is available at:
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 1.3.0 | 2026-06-11 | Added optional embedded context content fields for Inline Tez Level 0 context entries (`id`, `type`, `mime`, `size`, `hash`, `content_b64`). Defined delimiter safety, integrity-on-import behavior, embedding budget guidance with reference fallback, and graceful degradation for consumers that ignore the new fields. |
+| 1.2.5 | 2026-06-11 | Added optional embedded context content fields for Inline Tez Level 0 context entries (`id`, `type`, `mime`, `size`, `hash`, `content_b64`). Defined delimiter safety, integrity-on-import behavior, embedding budget guidance with reference fallback, and graceful degradation for consumers that ignore the new fields. This is a backward-compatible addition within the v1.2 document line and a candidate for consolidation into a future v1.3 file alongside the Section 14 proposals. |
 | 1.2.4 | 2026-02-05 | Updated companion spec versions (Code Review Profile v0.2.0 Proposed, Coordination Profile v1.1-draft, TIP Enterprise Addendum v1.1-draft). Added 4 JSON Schema files for companion specifications. Updated Ragu implementer status with 44-test conformance suite, reference implementations, and schema deliverables. Added v1.3 Proposed Features section with three accepted proposals: bundle signature verification, interrogation session transfer, and context item versioning. |
 | 1.2.3 | 2026-02-05 | Added companion spec references for Coordination Profile, Code Review Profile, and TIP Enterprise Addendum. Added `review` and `coordination` synthesis types. Added `synthesis.supplementary` field. Updated Ragu Platform implementer status. |
 | 1.2.2 | 2026-02-05 | Extended citation syntax with element-type references (tables, figures, paragraphs). Living document failure modes (source unavailable, degraded context, freshness warnings). Extension registry process with PR-based contribution, vendor namespaces, and lifecycle stages. Code Review profile (proposed, contributed by Ragu Platform). Ragu Platform added as second implementer. |

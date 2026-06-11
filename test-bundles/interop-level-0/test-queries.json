@@ -122,7 +122,7 @@
     "expected_classification": "grounded",
     "expected_citations": ["embedded-canary-context"],
     "passing_criteria": {
-      "must_contain": "UklHQUJD",
+      "must_contain": "VERDANT-6",
       "must_cite": ["embedded-canary-context"],
       "classification_must_be": "grounded"
     },

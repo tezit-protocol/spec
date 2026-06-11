@@ -1,7 +1,7 @@
 # Level 0 Interoperability Test Bundle
 
 **Bundle ID**: `interop-level-0-2026-02`
-**Tezit Protocol Version**: 1.3.0
+**Tezit Protocol Version**: 1.2.5
 **Contributed By**: Ragu Platform
 **Last Updated**: June 11, 2026
 
@@ -67,6 +67,11 @@ Queries marked with `capability_gated: true` and `required_capability:
 "embedded_context_content"` are required only for implementations that support
 embedded content; implementations without embedded-content support must not start
 failing Level 0.
+
+The embedded-content canary keeps the canary fact only in decoded context bytes:
+plain grep for the codeword across `test-bundles/interop-level-0/` should hit
+only `test-queries.json`; decoding the canary `content_b64` with `base64 -d`
+and grepping the decoded bytes should hit the canary sentence.
 
 ### Step 3: Validate Results
 
